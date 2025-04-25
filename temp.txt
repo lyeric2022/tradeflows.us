@@ -1,0 +1,1 @@
+okay awesome. how to make better? rmb the project goal. rmb what im trying to achieve. i got the dataset through combining wits, trade flows, and elasticity. ideally, i wanna have a simulator where, the user can adjust the trade, and see how the gdp and trade flows change. 
