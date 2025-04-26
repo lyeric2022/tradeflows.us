@@ -327,50 +327,55 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     };
   }, []);
 
-  // Update the spin control button style - changed from circular to rectangular
+  // Update the spin control button style - added white outline
   const spinButtonStyle = {
     position: 'absolute',
     top: '20px',
     right: '20px',
     backgroundColor: isGlobeSpinning ? 'rgba(30, 174, 152, 0.8)' : 'rgba(0, 0, 0, 0.7)',
     color: 'white',
-    border: 'none',
-    borderRadius: '6px', // Changed from 50% to 6px for rectangular shape
-    padding: '8px 12px', // Using padding instead of fixed dimensions
+    border: '2px solid rgba(255, 255, 255, 0.9)',  // Added white outline
+    borderRadius: '6px',
+    padding: '8px 12px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     zIndex: 10,
     boxShadow: '0 0 10px rgba(0,0,0,0.5)',
-    transition: 'background-color 0.3s ease',
+    transition: 'all 0.3s ease',  // Changed to all for smoother transitions
     fontSize: '16px',
-    opacity: 0.8
+    opacity: 0.9,  // Increased opacity for better visibility
+    minWidth: '40px',  // Ensure consistent width between play/pause icons
+    minHeight: '36px'  // Ensure consistent height
   };
 
+  // Add window size detection for responsive layouts
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
+  // Track window resizing
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // First, let's update the info panel style to be more responsive
   const infoStyle = {
     position: 'absolute',
-    top: '10px',
+    top: windowWidth <= 768 ? '200px' : '50px', // Move down on mobile
     right: '10px',
     background: 'rgba(0, 0, 0, 0.7)',
     color: 'white',
-    padding: '15px',
+    padding: windowWidth <= 768 ? '10px' : '15px',
     borderRadius: '6px',
-    maxWidth: '350px',
-    width: 'calc(100% - 20px)',
-    maxHeight: 'calc(100vh - 100px)',
+    maxWidth: windowWidth <= 768 ? '90%' : '350px',
+    width: windowWidth <= 768 ? 'calc(100% - 20px)' : 'auto',
+    maxHeight: windowWidth <= 768 ? 'calc(60vh)' : 'calc(100vh - 100px)',
     overflowY: 'auto',
     zIndex: 10,
     boxShadow: '0 2px 15px rgba(0,0,0,0.5)',
-    fontSize: '14px',
-    '@media (max-width: 600px)': {
-      maxWidth: 'calc(100% - 20px)',
-      right: '10px',
-      top: '10px',
-      padding: '10px',
-      fontSize: '12px'
-    }
+    fontSize: windowWidth <= 768 ? '12px' : '14px'
   };
 
   const closeBtn = {
@@ -380,7 +385,7 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     background: 'transparent',
     border: 'none',
     color: 'white',
-    fontSize: '22px',
+    fontSize: windowWidth <= 768 ? '18px' : '22px',
     cursor: 'pointer',
     padding: '2px 8px',
     borderRadius: '50%',
@@ -501,15 +506,29 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
       {selectedCountry && (
         <div style={infoStyle} data-info-panel="true">
           <button onClick={() => setSelectedCountry(null)} style={closeBtn}>×</button>
-          <h3 style={{ marginTop: 0 }}>{selectedCountry.iso3}</h3>
+          <h3 style={{ 
+            marginTop: 0, 
+            fontSize: windowWidth <= 768 ? '16px' : '18px',
+            marginBottom: windowWidth <= 768 ? '8px' : '12px'
+          }}>{selectedCountry.iso3}</h3>
           
-          <h4 style={{ marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '5px' }}>Trade Flows:</h4>
-          <div style={{ maxHeight: '50vh', overflowY: 'auto', paddingRight: '5px' }}>
+          <h4 style={{ 
+            marginBottom: '6px', 
+            borderBottom: '1px solid rgba(255,255,255,0.2)', 
+            paddingBottom: '5px',
+            fontSize: windowWidth <= 768 ? '14px' : '16px'
+          }}>Trade Flows:</h4>
+          
+          <div style={{ 
+            maxHeight: windowWidth <= 768 ? '40vh' : '50vh', 
+            overflowY: 'auto', 
+            paddingRight: '5px'
+          }}>
             {getCountryFlows().map((flow, idx) => (
               <div key={idx} style={{ 
                 borderBottom: '1px solid rgba(255,255,255,0.2)', 
-                marginBottom: '8px',
-                paddingBottom: '8px' 
+                marginBottom: windowWidth <= 768 ? '6px' : '8px',
+                paddingBottom: windowWidth <= 768 ? '6px' : '8px' 
               }}>
                 <div>
                   <strong>
@@ -517,10 +536,17 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
                     {flow.isRetaliation && <span style={{ color: '#ff9966' }}> (Retaliation)</span>}
                   </strong>
                 </div>
-                <div>Value: {flow.value.toLocaleString()}</div>
-                <div>Original: {flow.baseTotal.toLocaleString()}</div>
-                {flow.elasticity && <div>Elasticity: {flow.elasticity.toFixed(2)}</div>}
-                <div>Change: 
+                <div style={{ fontSize: windowWidth <= 768 ? '11px' : 'inherit' }}>
+                  Value: {flow.value.toLocaleString()}
+                </div>
+                <div style={{ fontSize: windowWidth <= 768 ? '11px' : 'inherit' }}>
+                  Original: {flow.baseTotal.toLocaleString()}
+                </div>
+                {windowWidth > 768 && flow.elasticity && 
+                  <div>Elasticity: {flow.elasticity.toFixed(2)}</div>
+                }
+                <div style={{ fontSize: windowWidth <= 768 ? '11px' : 'inherit' }}>
+                  Change: 
                   <span style={{ 
                     color: flow.value < flow.baseTotal ? '#ff8080' : '#80ff80',
                     fontWeight: 'bold',
@@ -536,28 +562,28 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
             )}
           </div>
           
-          {/* Summary statistics for selected country */}
+          {/* Only show detailed summary on larger screens */}
           {getCountryFlows().length > 0 && (
-            <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.3)', paddingTop: '10px' }}>
-              <h4 style={{ marginBottom: '8px' }}>Trade Summary:</h4>
-              <p style={{ margin: '5px 0' }}>
+            <div style={{ 
+              marginTop: windowWidth <= 768 ? '10px' : '15px', 
+              borderTop: '1px solid rgba(255,255,255,0.3)', 
+              paddingTop: windowWidth <= 768 ? '8px' : '10px'
+            }}>
+              <h4 style={{ 
+                marginBottom: '6px',
+                fontSize: windowWidth <= 768 ? '14px' : '16px'
+              }}>Trade Summary:</h4>
+              <p style={{ margin: '5px 0', fontSize: windowWidth <= 768 ? '11px' : 'inherit' }}>
                 Total Volume: {
                   getCountryFlows().reduce((sum, flow) => sum + flow.value, 0).toLocaleString()
                 }
               </p>
-              <p style={{ margin: '5px 0' }}>
+              <p style={{ margin: '5px 0', fontSize: windowWidth <= 768 ? '11px' : 'inherit' }}>
                 <span title="Weighted average based on trade volumes">
                   Weighted Elasticity: {getWeightedElasticity(getCountryFlows()).toFixed(2)}
                 </span>
-                <span style={{ 
-                  marginLeft: '6px',
-                  fontSize: '12px',
-                  color: '#999'
-                }}>
-                  (volume-weighted average)
-                </span>
               </p>
-              <p style={{ margin: '5px 0' }}>
+              <p style={{ margin: '5px 0', fontSize: windowWidth <= 768 ? '11px' : 'inherit' }}>
                 Impact of {(tariffRate * 100).toFixed(0)}% Tariff:{' '}
                 <span style={{
                   color: getCountryFlows().reduce((sum, flow) => sum + flow.value, 0) < 
@@ -573,23 +599,24 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
                 </span>
               </p>
               
-              {/* Add an elasticity explainer */}
-              <div style={{ 
-                marginTop: '10px', 
-                fontSize: '12px', 
-                background: 'rgba(33, 150, 243, 0.1)', 
-                padding: '8px', 
-                borderRadius: '4px',
-                borderLeft: '3px solid #2196F3',
-              }}>
-                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>About Trade Elasticity</p>
-                <p style={{ margin: '0' }}>
-                  Elasticity values vary by product category. Countries trading in products with 
-                  higher elasticity (like vehicles at {4.48.toFixed(2)}) will see larger impacts than 
-                  those trading in products with lower elasticity (like aircraft at {0.11.toFixed(2)}).
-                  This weighted average reflects this country's specific trade composition.
-                </p>
-              </div>
+              {/* Only show elasticity explainer on larger screens */}
+              {windowWidth > 768 && (
+                <div style={{ 
+                  marginTop: '10px', 
+                  fontSize: '12px', 
+                  background: 'rgba(33, 150, 243, 0.1)', 
+                  padding: '8px', 
+                  borderRadius: '4px',
+                  borderLeft: '3px solid #2196F3',
+                }}>
+                  <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>About Trade Elasticity</p>
+                  <p style={{ margin: '0' }}>
+                    Elasticity values vary by product category. Countries trading in products with 
+                    higher elasticity (like vehicles at {4.48.toFixed(2)}) will see larger impacts than 
+                    those trading in products with lower elasticity (like aircraft at {0.11.toFixed(2)}).
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

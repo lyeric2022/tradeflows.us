@@ -106,7 +106,7 @@ const TariffControls = ({
             onClick={handleMethodologyClick}
             style={{ 
               background: 'none', 
-              border: 'none', 
+              border: 'none',  // Already has no outline
               color: '#2196F3', 
               textDecoration: 'underline', 
               cursor: 'pointer',
