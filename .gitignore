@@ -32,7 +32,6 @@ env/
 .venv/
 
 # Data files
-*.json
 *.xlsx
 *.xls
 /data/
