@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import centroids from '../iso_centroids.json';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export default function USATradeStats({ csvUrl = '/flows.csv' }) {
@@ -8,10 +7,14 @@ export default function USATradeStats({ csvUrl = '/flows.csv' }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Color palette for the pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'];
+  // Enhanced color palette for the pie chart
+  const COLORS = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+  ];
 
   useEffect(() => {
+    // Existing data loading logic
     fetch(csvUrl)
       .then(r => (r.ok ? r.text() : Promise.reject(`Status ${r.status}`)))
       .then(csvText => {
@@ -56,10 +59,47 @@ export default function USATradeStats({ csvUrl = '/flows.csv' }) {
       .finally(() => setLoading(false));
   }, [csvUrl]);
 
-  // Handle loading and error states
-  if (loading) return <div>Loading USA trade data...</div>;
-  if (error) return <div style={{ color: 'salmon' }}>Error: {String(error)}</div>;
-  if (!tradeVolumes.length) return <div>No USA trade data found</div>;
+  // Loading state with improved styling
+  if (loading) return (
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100%',
+      fontSize: '1.2rem',
+      color: '#3498db'
+    }}>
+      <div>Loading USA trade data...</div>
+    </div>
+  );
+  
+  // Error state with improved styling
+  if (error) return (
+    <div style={{ 
+      padding: '2rem',
+      maxWidth: '800px',
+      margin: '0 auto',
+      color: 'white',
+      backgroundColor: '#e74c3c',
+      borderRadius: '8px',
+      textAlign: 'center'
+    }}>
+      <h3>Error Loading Data</h3>
+      <div>{String(error)}</div>
+    </div>
+  );
+  
+  if (!tradeVolumes.length) return (
+    <div style={{ 
+      padding: '2rem',
+      maxWidth: '800px',
+      margin: '0 auto',
+      color: '#aaa',
+      textAlign: 'center',
+      backgroundColor: '#2c3e50',
+      borderRadius: '8px'
+    }}>No USA trade data found</div>
+  );
 
   // Calculate total volume for reference
   const totalVolume = tradeVolumes.reduce((sum, entry) => sum + entry.volume, 0);
@@ -86,57 +126,196 @@ export default function USATradeStats({ csvUrl = '/flows.csv' }) {
     });
   }
 
+  // Custom tooltip for the pie chart
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div style={{ 
+          backgroundColor: 'rgba(30, 40, 50, 0.9)',
+          padding: '10px',
+          border: '1px solid #444',
+          borderRadius: '4px',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+          color: '#eee'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{data.name}</div>
+          <div>Volume: {data.value.toLocaleString()}</div>
+          <div>Share: {((data.value / totalVolume) * 100).toFixed(2)}%</div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div style={{ padding: '1rem', maxHeight: '80vh', overflow: 'auto' }}>
-      <h2>Total Trade Volume with USA</h2>
-      <p>Total volume across all countries: {totalVolume.toLocaleString()}</p>
+    <div style={{ 
+      padding: '2rem', 
+      maxWidth: '1200px', 
+      margin: '0 auto',
+      color: '#eee',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+      lineHeight: 1.6,
+      backgroundColor: '#1a2634',
+      height: '100%',
+      overflowY: 'auto'
+    }}>
+      <h1 style={{ 
+        color: '#3498db', 
+        borderBottom: '3px solid #3498db', 
+        paddingBottom: '0.5rem',
+        marginBottom: '1.5rem',
+        textAlign: 'center' 
+      }}>
+        USA Trade Statistics
+      </h1>
       
-      {/* Pie Chart */}
-      <div style={{ width: '100%', height: 400, marginBottom: 30 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              labelLine={true}
-              outerRadius={150}
-              fill="#8884d8"
-              dataKey="value"
-              nameKey="name"
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => value.toLocaleString()} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+      <div style={{ 
+        backgroundColor: '#2c3e50', 
+        padding: '1.5rem', 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ color: '#eee', margin: '0 0 0.5rem' }}>Total Trade Volume</h2>
+        <div style={{ 
+          fontSize: '2rem', 
+          fontWeight: 'bold', 
+          color: '#3498db' 
+        }}>
+          {totalVolume.toLocaleString()}
+        </div>
+        <div style={{ color: '#bbb', fontSize: '0.9rem' }}>
+          Across all trading partners
+        </div>
       </div>
       
-      {/* Table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #333' }}>
-            <th style={{ textAlign: 'left', padding: '8px' }}>Country</th>
-            <th style={{ textAlign: 'right', padding: '8px' }}>Volume</th>
-            <th style={{ textAlign: 'right', padding: '8px' }}>% of Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tradeVolumes.map(({ country, volume }) => (
-            <tr key={country} style={{ borderBottom: '1px solid #ddd' }}>
-              <td style={{ padding: '8px' }}>{country}</td>
-              <td style={{ textAlign: 'right', padding: '8px' }}>{volume.toLocaleString()}</td>
-              <td style={{ textAlign: 'right', padding: '8px' }}>
-                {((volume / totalVolume) * 100).toFixed(2)}%
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Pie Chart with enhanced styling */}
+      <div style={{ 
+        backgroundColor: '#2c3e50', 
+        padding: '1.5rem', 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+        marginBottom: '2rem'
+      }}>
+        <h2 style={{ 
+          color: '#eee', 
+          marginTop: 0, 
+          textAlign: 'center',
+          marginBottom: '1.5rem'
+        }}>
+          Trade Distribution by Country
+        </h2>
+        
+        <div style={{ width: '100%', height: 400 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                outerRadius={150}
+                fill="#8884d8"
+                dataKey="value"
+                nameKey="name"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      
+      {/* Table with enhanced styling */}
+      <div style={{ 
+        backgroundColor: '#2c3e50', 
+        padding: '1.5rem', 
+        borderRadius: '8px', 
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+      }}>
+        <h2 style={{ 
+          color: '#eee', 
+          marginTop: 0, 
+          textAlign: 'center',
+          marginBottom: '1.5rem'
+        }}>
+          Detailed Country Breakdown
+        </h2>
+        
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
+          }}>
+            <thead>
+              <tr style={{ 
+                borderBottom: '2px solid #3498db',
+                backgroundColor: '#1e2c3a'
+              }}>
+                <th style={{ 
+                  textAlign: 'left', 
+                  padding: '1rem',
+                  color: '#eee'
+                }}>Country</th>
+                <th style={{ 
+                  textAlign: 'right', 
+                  padding: '1rem',
+                  color: '#eee'
+                }}>Volume</th>
+                <th style={{ 
+                  textAlign: 'right', 
+                  padding: '1rem',
+                  color: '#eee'
+                }}>% of Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tradeVolumes.map(({ country, volume }, index) => (
+                <tr 
+                  key={country} 
+                  style={{ 
+                    borderBottom: '1px solid #445566',
+                    backgroundColor: index % 2 === 0 ? '#2c3e50' : '#253545'
+                  }}
+                >
+                  <td style={{ 
+                    padding: '0.8rem 1rem', 
+                    fontWeight: index < 5 ? 'bold' : 'normal',
+                    color: '#eee'
+                  }}>
+                    {country}
+                  </td>
+                  <td style={{ 
+                    textAlign: 'right', 
+                    padding: '0.8rem 1rem',
+                    fontFamily: 'monospace',
+                    fontSize: '1.1rem',
+                    color: '#eee'
+                  }}>
+                    {volume.toLocaleString()}
+                  </td>
+                  <td style={{ 
+                    textAlign: 'right', 
+                    padding: '0.8rem 1rem',
+                    color: index < 3 ? '#e74c3c' : '#bbb',
+                    fontWeight: index < 3 ? 'bold' : 'normal'
+                  }}>
+                    {((volume / totalVolume) * 100).toFixed(2)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

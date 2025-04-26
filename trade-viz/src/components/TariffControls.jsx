@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 /**
  * Tariff control panel component with slider, retaliation toggle, and impact display
@@ -11,15 +11,25 @@ import React from 'react';
  * @param {number} gdpPctImpact - Calculated GDP impact percentage
  * @param {function} onShowMethodology - Function to show methodology modal
  */
-export default function TariffControls({
-  tariffRate,
-  setTariffRate,
-  retaliationEnabled,
+const TariffControls = ({ 
+  tariffRate, 
+  setTariffRate, 
+  retaliationEnabled, 
   setRetaliationEnabled,
   tradePctChange,
   gdpPctImpact,
-  onShowMethodology
-}) {
+  onShowMethodology,
+  showMethodology  // Add this prop to receive current state
+}) => {
+  // Add a lastClickTime ref to track double clicks
+  const lastClickTimeRef = useRef(0);
+
+  // Modify the methodology button click handler to toggle visibility
+  const handleMethodologyClick = () => {
+    // Toggle methodology visibility (if it's shown, hide it; if hidden, show it)
+    onShowMethodology(!showMethodology);
+  };
+
   return (
     <div style={{ 
       position: 'absolute', 
@@ -92,8 +102,8 @@ export default function TariffControls({
           {retaliationEnabled && <span style={{ color: '#ff9966', marginLeft: '5px' }}> (with retaliation)</span>}
         </div>
         <div style={{ marginTop: '8px', textAlign: 'left' }}>
-          <button 
-            onClick={onShowMethodology}
+          <button
+            onClick={handleMethodologyClick}
             style={{ 
               background: 'none', 
               border: 'none', 
@@ -104,10 +114,12 @@ export default function TariffControls({
               padding: 0
             }}
           >
-            Learn about calculations
+            {showMethodology ? "Hide calculations" : "Learn about calculations"}
           </button>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default TariffControls;
