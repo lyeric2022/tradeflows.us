@@ -35,9 +35,19 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [countryData, setCountryData] = useState(null);
   const [showMethodology, setShowMethodology] = useState(false);
-  // Add this new state to track globe spinning status
-  const { isGlobeSpinning, toggleSpinning } = useGlobeMomentum(globeEl);
+  // Add a state to track globe spinning status
+  const [isGlobeSpinning, setIsGlobeSpinning] = useState(true);
   
+  // Define the toggle function to control globe rotation
+  const toggleSpinning = useCallback(() => {
+    if (globeEl.current) {
+      const controls = globeEl.current.controls();
+      const newSpinState = !controls.autoRotate;
+      controls.autoRotate = newSpinState;
+      setIsGlobeSpinning(newSpinState);
+    }
+  }, []);
+
   // Add a new state for country points
   const [countryPoints, setCountryPoints] = useState([]);
   
@@ -266,25 +276,34 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     }));
   }, [tariffRate, retaliationEnabled, flows]);
 
-  // 4) Globe auto-rotate setup
+  // 4) Globe auto-rotate setup - separate initial position from rotation toggle
   useEffect(() => {
+    // Set initial position only once when component mounts
     const timer = setTimeout(() => {
       if (globeEl.current) {
-        // Set initial position to USA
+        // Set initial position to USA only on first load
         globeEl.current.pointOfView({
           lat: 39.8283,
           lng: -98.5795,
           altitude: 2.5
         }, 1000);
         
-        globeEl.current.controls().autoRotate = true;
+        // Initialize rotation
+        globeEl.current.controls().autoRotate = isGlobeSpinning;
         globeEl.current.controls().autoRotateSpeed = 0.4;
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, []); // Only run once on mount, not when isGlobeSpinning changes
 
-  // Add another effect to reset rotation after user interaction
+  // Separate effect to handle only rotation changes
+  useEffect(() => {
+    if (globeEl.current) {
+      globeEl.current.controls().autoRotate = isGlobeSpinning;
+    }
+  }, [isGlobeSpinning]);
+
+  // Update the interaction handler to sync with our spinning state
   useEffect(() => {
     const handleInteractionEnd = (event) => {
       // Ignore clicks on the spin control button to prevent conflicts
@@ -292,8 +311,9 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         return;
       }
       
-      if (globeEl.current) {
-        // Stop auto-rotation after user interaction
+      if (globeEl.current && globeEl.current.controls().autoRotate) {
+        // Update our state to match reality when user interacts
+        setIsGlobeSpinning(false);
         globeEl.current.controls().autoRotate = false;
       }
     };
@@ -307,10 +327,10 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     };
   }, []);
 
-  // Styles for the spin control button
+  // Update the spin control button style - moved to top right
   const spinButtonStyle = {
     position: 'absolute',
-    bottom: '20px',  // Adjusted for better mobile positioning
+    top: '20px',  // Changed from bottom: '20px' to top: '20px'
     right: '20px',
     backgroundColor: isGlobeSpinning ? 'rgba(30, 174, 152, 0.8)' : 'rgba(0, 0, 0, 0.7)',
     color: 'white',
@@ -432,10 +452,12 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         pointColor={d => selectedCountry && d.iso3 === selectedCountry.iso3 
           ? 'orange' 
           : 'white'}
-        pointAltitude={0.005}
+        pointAltitude={0.01}
         pointRadius={d => selectedCountry && d.iso3 === selectedCountry.iso3 
           ? 0.8
-          : 0.4}
+          : 0.6}
+        // Add a much larger hit radius for easier clicking while keeping visual appearance the same
+        pointHitRadius={2.5}
         pointLabel={d => d.iso3}
         onPointClick={handleCountryClick}
         arcColor={d => {
@@ -581,7 +603,7 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         data-spin-control="true"
         title={isGlobeSpinning ? "Pause rotation" : "Resume rotation"}
       >
-        {isGlobeSpinning ? "⏸" : "⟳"}
+        {isGlobeSpinning ? "⏸" : "▶"}
       </button>
     </div>
   );
