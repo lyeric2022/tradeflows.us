@@ -18,7 +18,7 @@ const TariffsPage = () => {
       <div style={{ marginBottom: '2rem' }}>
         <h3>Key Policy Elements</h3>
         <ul style={{ lineHeight: '1.6' }}>
-          <li><strong>Universal Tariffs:</strong> 10-20% baseline on all imports, with targeted increases (60% on China, 100% on Mexico and foreign-made cars)</li>
+          <li><strong>Universal Tariffs:</strong> 10% baseline, with targeted increases (145% on China, 25% on Mexico, etc.)</li>
           <li><strong>Reciprocal Approach:</strong> Tariff rates calculated based on bilateral trade deficits</li>
           <li><strong>Manufacturing Focus:</strong> Designed to incentivize domestic production</li>
         </ul>

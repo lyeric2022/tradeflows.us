@@ -1,8 +1,7 @@
 import React from 'react';
 
 /**
- * Modal component explaining the calculation methodology
- * with a sprinkle of Trump-era tariff jokes
+ * Modal component explaining the simulation methodology
  */
 export default function MethodologyModal({ show, onClose }) {
   if (!show) return null;
@@ -56,89 +55,23 @@ export default function MethodologyModal({ show, onClose }) {
         paddingBottom: '10px',
         paddingRight: '40px'
       }}>
-        The Math Behind the Magic
+        Simulation Methodology
       </h2>
       
       <div style={{ 
         lineHeight: 1.5, 
-        marginBottom: '20px',
-        paddingRight: window.innerWidth < 600 ? '0' : '10px' 
+        marginBottom: '20px'
       }}>
-        <h3 style={{ color: '#2196F3', marginBottom: '8px' }}>Trade Flow Impact</h3>
         <p>
-          Ever wonder why a 30% tariff doesn't just reduce trade by exactly 30%? 
-          That's where <strong>elasticity</strong> comes in! (And no, it's not just about "winning so much you'll get tired of winning.")
+          This visualization simulates the impact of tariffs on international trade flows based on 
+          economic principles of trade elasticity. The model accounts for:
         </p>
         
-        <div style={{ 
-          backgroundColor: 'rgba(33, 150, 243, 0.1)', 
-          padding: '10px', 
-          borderRadius: '5px',
-          marginTop: '10px',
-          marginBottom: '15px',
-          fontFamily: 'monospace',
-          border: '1px solid rgba(33, 150, 243, 0.3)'
-        }}>
-          <strong>New Trade</strong> = Base Trade × (1 + tariff)<sup>-|elasticity|</sup>
-        </div>
-        
-        <p>
-          Product-specific elasticities range from low (aircraft: 0.11) to high (vehicles: 4.48).
-          Higher elasticity = bigger trade impact! It's almost like tariffs are more complex than just "beautiful, beautiful deals."
-        </p>
-      </div>
-      
-      <div style={{ 
-        lineHeight: 1.5, 
-        marginBottom: '20px' 
-      }}>
-        <h3 style={{ color: '#2196F3', marginBottom: '8px' }}>Retaliation Effects</h3>
-        <p>
-          When countries fight back with counter-tariffs, things get spicy! 🔥
-          (Way spicier than expected, almost like nobody thought China would actually clap back.)
-        </p>
-        
-        <div style={{ 
-          backgroundColor: 'rgba(33, 150, 243, 0.1)', 
-          padding: '10px', 
-          borderRadius: '5px',
-          marginTop: '10px',
-          marginBottom: '15px',
-          fontFamily: 'monospace',
-          border: '1px solid rgba(33, 150, 243, 0.3)'
-        }}>
-          <strong>Retaliation Impact</strong> = -0.8 × (1.0 - e<sup>1.65 × rawImpact</sup>)
-        </div>
-        
-        <p>
-          Based on 2018-2020 trade war data, retaliation typically amplifies 
-          economic impacts by 60-70%. Turns out trade wars aren't “easy to win” — unless your strategy is “everybody loses.”
-        </p>
-      </div>
-      
-      <div style={{ 
-        lineHeight: 1.5, 
-        marginBottom: '20px' 
-      }}>
-        <h3 style={{ color: '#2196F3', marginBottom: '8px' }}>GDP Impact</h3>
-        
-        <div style={{ 
-          backgroundColor: 'rgba(33, 150, 243, 0.1)', 
-          padding: '10px', 
-          borderRadius: '5px',
-          marginTop: '10px',
-          marginBottom: '15px',
-          fontFamily: 'monospace',
-          border: '1px solid rgba(33, 150, 243, 0.3)'
-        }}>
-          <strong>GDP Impact</strong> = Trade Impact × Trade-to-GDP Ratio × Impact Factor<br/>
-          = Trade Impact × 0.27 × 0.75
-        </div>
-        
-        <p>
-          The 0.75 impact factor accounts for sector dynamics and domestic substitution.
-          Sure, you *could* buy American... but don’t be surprised if your “freedom fridge” costs twice as much.
-        </p>
+        <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
+          <li>Product-specific elasticity values that determine sensitivity to tariffs</li>
+          <li>Potential retaliatory tariffs and their cascading effects</li>
+          <li>Trade-to-GDP ratio relationships for economic impact estimation</li>
+        </ul>
       </div>
       
       <div style={{ 
@@ -149,14 +82,12 @@ export default function MethodologyModal({ show, onClose }) {
         paddingTop: '10px' 
       }}>
         <p>
-          <strong>Sources:</strong> World Bank (2022), USITC, IMF Direction of Trade Statistics, and 
-          countless economists who probably need a drink after analyzing trade data (or two if they lived through 2018).
+          <strong>Sources:</strong> World Bank, USITC, IMF Direction of Trade Statistics
         </p>
         <p style={{ fontSize: '11px', marginTop: '10px' }}>
           <em>Note: This model is a simulation based on historical data. 
           Actual economic impacts vary based on complex geopolitical factors, supply chain
-          adjustments, and market conditions. Kind of like how weather forecasts work,
-          but for your wallet.</em>
+          adjustments, and market conditions.</em>
         </p>
       </div>
     </div>

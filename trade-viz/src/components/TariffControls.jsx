@@ -114,7 +114,7 @@ const TariffControls = ({
               padding: 0
             }}
           >
-            {showMethodology ? "Hide calculations" : "Learn about calculations"}
+            {showMethodology ? "Hide calculations" : "Learn more"}
           </button>
         </div>
       </div>

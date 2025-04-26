@@ -327,17 +327,16 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     };
   }, []);
 
-  // Update the spin control button style - moved to top right
+  // Update the spin control button style - changed from circular to rectangular
   const spinButtonStyle = {
     position: 'absolute',
-    top: '20px',  // Changed from bottom: '20px' to top: '20px'
+    top: '20px',
     right: '20px',
     backgroundColor: isGlobeSpinning ? 'rgba(30, 174, 152, 0.8)' : 'rgba(0, 0, 0, 0.7)',
     color: 'white',
     border: 'none',
-    borderRadius: '50%',
-    width: '40px',
-    height: '40px',
+    borderRadius: '6px', // Changed from 50% to 6px for rectangular shape
+    padding: '8px 12px', // Using padding instead of fixed dimensions
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -345,8 +344,8 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     zIndex: 10,
     boxShadow: '0 0 10px rgba(0,0,0,0.5)',
     transition: 'background-color 0.3s ease',
-    fontSize: '20px',
-    opacity: 0.7
+    fontSize: '16px',
+    opacity: 0.8
   };
 
   // First, let's update the info panel style to be more responsive
@@ -482,7 +481,7 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         arcDashGap={2}
         arcDashAnimateTime={3000}
         width={window.innerWidth}
-        height={window.innerHeight}
+        height={window.innerHeight - 70}
         arcLabel={d => `
           Trade volume: ${d.value.toLocaleString()}
           ${d.reporterISO3} → ${d.partnerISO}
