@@ -1,15 +1,28 @@
 // src/components/ArcMap.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 import Globe from 'react-globe.gl';
 import centroids from '../iso_centroids.json';
+import { 
+  calculateDistanceRadians, 
+  calculateDistanceEffect, 
+  calculateArcAltitude 
+} from '../utils/arcCalculations';
+import MethodologyModal from './MethodologyModal';
+import TariffControls from './TariffControls';
+import * as THREE from 'three';
 
 /**
  * ArcMap with tariff simulation and GDP impact demo.
  * Uses dataset's tau_mean (elasticity) to adjust trade volumes under tariffs.
  */
 export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 }) {
+  // Add this normalize helper function
+  const normalize = (value, min, max) => {
+    return Math.max(0, Math.min(1, (value - min) / (max - min || 1)));
+  };
+  
   const globeEl = useRef();
   const [flows, setFlows]           = useState([]);
   const [baselineArcs, setBaselineArcs] = useState([]);
@@ -20,8 +33,76 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
   const [selectedArc, setSelectedArc] = useState(null);
-  // Move this declaration up with other state variables
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [countryData, setCountryData] = useState(null);
   const [showMethodology, setShowMethodology] = useState(false);
+  // Add this new state to track globe spinning status
+  const [isGlobeSpinning, setIsGlobeSpinning] = useState(true);
+  
+  // Add a new state for country points
+  const [countryPoints, setCountryPoints] = useState([]);
+  
+  // Process centroids into points for the globe
+  useEffect(() => {
+    // Convert the centroids object into an array of points
+    const points = Object.entries(centroids).map(([iso, coords]) => {
+      if (!coords || coords.length < 2) return null;
+      
+      return {
+        id: iso,
+        lat: coords[1],
+        lng: coords[0],
+        iso3: iso,
+        // Include any other data you want to associate with the point
+      };
+    }).filter(Boolean); // Remove any null entries
+    
+    setCountryPoints(points);
+  }, []);
+  
+  // Add globe click handler to toggle spinning
+  const handleGlobeClick = useCallback(() => {
+    if (globeEl.current) {
+      const controls = globeEl.current.controls();
+      const newSpinState = !controls.autoRotate;
+      controls.autoRotate = newSpinState;
+      setIsGlobeSpinning(newSpinState);
+    }
+  }, []);
+  
+  // Handle country selection - update this function
+  const handleCountryClick = useCallback((country) => {
+    // If clicking on already selected country, deselect it
+    if (selectedCountry && selectedCountry.iso3 === country.iso3) {
+      setSelectedCountry(null);
+      return;
+    }
+    
+    // Select the new country (automatically deselects previous)
+    setSelectedCountry(country);
+    
+    // Reset arc selection when selecting a country
+    setSelectedArc(null);
+    
+    // Smoothly move camera to selected country
+    if (globeEl.current) {
+      globeEl.current.pointOfView({
+        lat: country.lat,
+        lng: country.lng,
+        altitude: 1.5
+      }, 1000);
+    }
+  }, [selectedCountry]);
+  
+  // Get all trade flows for the selected country
+  const getCountryFlows = useCallback(() => {
+    if (!selectedCountry || !simArcs.length) return [];
+    
+    const iso = selectedCountry.iso3;
+    return simArcs.filter(arc => 
+      arc.reporterISO3 === iso || arc.partnerISO === iso
+    );
+  }, [selectedCountry, simArcs]);
 
   // 1) Load & enrich CSV
   useEffect(() => {
@@ -191,14 +272,16 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
 
   // Add another effect to reset rotation after user interaction
   useEffect(() => {
-    const handleInteractionEnd = () => {
+    const handleInteractionEnd = (event) => {
+      // Ignore clicks on the spin control button to prevent conflicts
+      if (event.target.closest('button[data-spin-control="true"]')) {
+        return;
+      }
+      
       if (globeEl.current) {
-        // Re-enable auto-rotation after user interaction
-        setTimeout(() => {
-          if (globeEl.current) {
-            globeEl.current.controls().autoRotate = true;
-          }
-        }, 2000);
+        // Stop auto-rotation after user interaction
+        globeEl.current.controls().autoRotate = false;
+        setIsGlobeSpinning(false);
       }
     };
     
@@ -211,35 +294,73 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     };
   }, []);
 
-  // Helper function to normalize value between 0 and 1
-  const normalize = (value, min, max) => {
-    if (min === max) return 0.5; // Handle edge case
-    return (value - min) / (max - min);
+  // Styles for the spin control button
+  const spinButtonStyle = {
+    position: 'absolute',
+    top: '20px',  // Changed from bottom to top
+    right: '20px',
+    backgroundColor: isGlobeSpinning ? 'rgba(30, 174, 152, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: '50px',
+    height: '50px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    zIndex: 10,
+    boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+    transition: 'background-color 0.3s ease'
   };
 
-  // Styles for the info panel
+  // Fix the toggle spinning function
+  const toggleSpinning = useCallback(() => {
+    if (globeEl.current) {
+      // Get direct reference to controls
+      const controls = globeEl.current.controls();
+      
+      // Toggle state based on the current state
+      const newSpinState = !isGlobeSpinning;
+      console.log("Current state:", isGlobeSpinning, "New state:", newSpinState);
+      
+      // Directly set the auto-rotate property 
+      controls.autoRotate = newSpinState;
+      
+      // Force an immediate update to the controls
+      controls.update();
+      
+      // Update React state to reflect the change
+      setIsGlobeSpinning(newSpinState);
+    }
+  }, [isGlobeSpinning]);
+
+  // Update the info panel styles to position on the right side
   const infoStyle = {
     position: 'absolute',
     top: '20px',
-    right: '20px',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    right: '80px', // Changed from left to right, with space for spin button
+    background: 'rgba(0,0,0,0.75)',
     color: 'white',
     padding: '15px',
-    borderRadius: '5px',
+    borderRadius: '8px',
     maxWidth: '300px',
+    maxHeight: '80vh',
+    overflowY: 'auto',
     zIndex: 10,
-    boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+    boxShadow: '0 0 15px rgba(0,0,0,0.5)'
   };
 
   const closeBtn = {
     position: 'absolute',
-    top: '10px',
+    top: '5px',
     right: '10px',
     background: 'none',
     border: 'none',
     color: 'white',
-    fontSize: '20px',
-    cursor: 'pointer'
+    fontSize: '24px',
+    cursor: 'pointer',
+    padding: '0 5px'
   };
 
   // Loading / Error states
@@ -274,173 +395,45 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
 
   // Adjusted for US trade-to-GDP ratio with sector-weighted impact
   const gdpPctImpact = tradePctChange * 0.27 * 0.75; // US trade/GDP ~27%, impact factor 0.75
-  
+
   return (
     <div style={{ position: 'relative', height: '100%' }}>
-      {/* Tariff slider and retaliation toggle overlay */}
-      <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1, background: 'rgba(0,0,0,0.6)', padding: '12px', borderRadius: '4px' }}>
-        <label style={{ color: '#fff', display: 'block', marginBottom: '4px' }}>
-          Tariff rate: {(tariffRate * 100).toFixed(0)}%
-        </label>
-        <input
-          type="range"
-          min={0}
-          max={1.5}
-          step={0.01}
-          value={tariffRate}
-          onChange={e => setTariffRate(Number(e.target.value))}
-          style={{ width: '200px', display: 'block' }}
-        />
-        
-        {/* Retaliation toggle */}
-        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center' }}>
-          <label style={{ color: '#fff', marginRight: '10px' }}>
-            Retaliation:
-          </label>
-          <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
-            <input 
-              type="checkbox" 
-              checked={retaliationEnabled}
-              onChange={e => setRetaliationEnabled(e.target.checked)}
-              style={{ opacity: 0, width: 0, height: 0 }}
-            />
-            <span style={{ 
-              position: 'absolute',
-              cursor: 'pointer',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: retaliationEnabled ? '#2196F3' : '#ccc',
-              transition: '.4s',
-              borderRadius: '12px'
-            }}>
-              <span style={{
-                position: 'absolute',
-                content: '""',
-                height: '16px',
-                width: '16px',
-                left: '4px',
-                bottom: '4px',
-                backgroundColor: 'white',
-                transition: '.4s',
-                borderRadius: '150%',
-                transform: retaliationEnabled ? 'translateX(22px)' : 'translateX(0)'
-              }}></span>
-            </span>
-          </label>
-        </div>
-        
-        <div style={{ color: '#fff', marginTop: '8px', fontSize: '14px' }}>
-          <div>
-            Trade Δ: <span style={{ color: tradePctChange < 0 ? '#ff8080' : '#80ff80' }}>{tradePctChange.toFixed(2)}%</span>
-            {retaliationEnabled && <span style={{ color: '#ff9966', marginLeft: '5px' }}> (with retaliation)</span>}
-          </div>
-          <div>
-            GDP Impact (est.): <span style={{ color: gdpPctImpact < 0 ? '#ff8080' : '#80ff80' }}>{gdpPctImpact.toFixed(2)}%</span>
-            {retaliationEnabled && <span style={{ color: '#ff9966', marginLeft: '5px' }}> (with retaliation)</span>}
-          </div>
-          <div style={{ marginTop: '8px', textAlign: 'left' }}>
-            <button 
-              onClick={() => setShowMethodology(true)}
-              style={{ 
-                background: 'none', 
-                border: 'none', 
-                color: '#2196F3', 
-                textDecoration: 'underline', 
-                cursor: 'pointer',
-                fontSize: '12px',
-                padding: 0
-              }}
-            >
-              Learn about calculations
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Use the new TariffControls component */}
+      <TariffControls
+        tariffRate={tariffRate}
+        setTariffRate={setTariffRate}
+        retaliationEnabled={retaliationEnabled}
+        setRetaliationEnabled={setRetaliationEnabled}
+        tradePctChange={tradePctChange}
+        gdpPctImpact={gdpPctImpact}
+        onShowMethodology={() => setShowMethodology(true)}
+      />
 
       {/* Methodology modal */}
-      {showMethodology && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          maxWidth: '600px',
-          maxHeight: '80vh',
-          overflowY: 'auto',
-          zIndex: 100,
-          boxShadow: '0 0 20px rgba(0,0,0,0.8)'
-        }}>
-          <button 
-            onClick={() => setShowMethodology(false)} 
-            style={{
-              position: 'absolute',
-              top: '15px',
-              right: '15px',
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              fontSize: '24px',
-              cursor: 'pointer'
-            }}
-          >
-            ×
-          </button>
-          
-          <h2 style={{ marginTop: 0, color: '#2196F3', borderBottom: '1px solid #555', paddingBottom: '10px' }}>
-            Calculation Methodology
-          </h2>
-          
-          <h3>Trade Flow Impact</h3>
-          <p>
-            We calculate the impact of tariffs on trade flows using elasticity values derived from 
-            empirical research. Each product category has a specific elasticity (τ) that determines 
-            how sensitive trade volume is to price changes.
-          </p>
-          <p>
-            <strong>Base Formula:</strong> New Trade = Base Trade × (1 + tariff)^(-|elasticity|)
-          </p>
-          
-          <h3>Retaliation Effects</h3>
-          <p>
-            When retaliation is enabled, we apply a multiplier of 1.65× to the trade impact, based on 
-            US-specific trade war data from 2018-2020. Research shows that retaliatory tariffs typically 
-            amplify economic impacts by 60-70% beyond direct tariff effects.
-          </p>
-          <p>
-            For negative impacts, we apply a non-linear curve: -0.8 × (1.0 - e^(1.8 × rawImpact))
-            This better matches observed trade flow disruptions during recent trade disputes.
-          </p>
-          
-          <h3>GDP Impact Calculation</h3>
-          <p>
-            The GDP impact is calculated by multiplying the trade impact percentage by:
-          </p>
-          <ul style={{ paddingLeft: '20px' }}>
-            <li><strong>US Trade-to-GDP ratio:</strong> 27% (2022 data from World Bank)</li>
-            <li><strong>Impact factor:</strong> 0.75 (accounts for sector-specific effects and domestic substitution)</li>
-          </ul>
-          <p>
-            <strong>Formula:</strong> GDP Impact = Trade Impact × 0.27 × 0.75
-          </p>
-          
-          <div style={{ marginTop: '20px', fontSize: '12px', color: '#aaa', borderTop: '1px solid #555', paddingTop: '10px' }}>
-            Data sources: World Bank (2022), USITC, IMF Direction of Trade Statistics, and 
-            peer-reviewed research on trade elasticities and tariff impacts.
-          </div>
-        </div>
-      )}
+      <MethodologyModal 
+        show={showMethodology} 
+        onClose={() => setShowMethodology(false)} 
+      />
 
-      {/* Globe with simulated arcs */}
+      {/* Globe with points for countries */}
       <Globe
         ref={globeEl}
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
         arcsData={simArcs}
+        
+        // Updated point properties
+        pointsData={countryPoints}
+        pointColor={d => selectedCountry && d.iso3 === selectedCountry.iso3 
+          ? 'orange' 
+          : 'white'}
+        pointAltitude={0.005} // Reduced altitude to make points shorter
+        pointRadius={d => selectedCountry && d.iso3 === selectedCountry.iso3 
+          ? 0.8  // Increased radius for selected country
+          : 0.4} // Increased radius for unselected countries
+        pointLabel={d => d.iso3}
+        onPointClick={handleCountryClick}
+        
+        // Keep existing arc properties
         arcColor={d => {
           const normalizedValue = normalize(d.value, min, max);
           const intensity = 0.4 + (normalizedValue * 0.6);
@@ -454,18 +447,10 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         arcAltitude={d => {
           const normalizedValue = normalize(d.value, min, max);
           
-          // Calculate distance between points (simple spherical approximation)
-          const distRadians = Math.acos(
-            Math.sin(d.startLat * Math.PI/180) * Math.sin(d.endLat * Math.PI/180) +
-            Math.cos(d.startLat * Math.PI/180) * Math.cos(d.endLat * Math.PI/180) *
-            Math.cos((d.startLng - d.endLng) * Math.PI/180)
-          );
-
-          // Normalize distance - closer points should have flatter arcs
-          const normalizedDist = Math.min(distRadians / (0.5 * Math.PI), 1);
-          const distEffect = Math.pow(normalizedDist, 3) * 0.6;
-
-          return 0.02 + distEffect + (normalizedValue * 0.1);
+          // Use the imported helper functions
+          const distRadians = calculateDistanceRadians(d.startLat, d.startLng, d.endLat, d.endLng);
+          const distEffect = calculateDistanceEffect(distRadians);
+          return calculateArcAltitude(normalizedValue, distEffect);
         }}
         arcDashLength={0.4}
         arcDashGap={2}
@@ -488,8 +473,64 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         onArcClick={d => setSelectedArc(d)}
       />
       
-      {/* Detailed info panel when arc is clicked */}
-      {selectedArc && (
+      {/* Country info panel - add data attribute for selection */}
+      {selectedCountry && (
+        <div style={infoStyle} data-info-panel="true">
+          <button onClick={() => setSelectedCountry(null)} style={closeBtn}>×</button>
+          <h3>{selectedCountry.iso3}</h3>
+          
+          <h4>Trade Flows:</h4>
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {getCountryFlows().map((flow, idx) => (
+              <div key={idx} style={{ 
+                borderBottom: '1px solid rgba(255,255,255,0.2)', 
+                marginBottom: '8px',
+                paddingBottom: '8px' 
+              }}>
+                <div>
+                  <strong>
+                    {flow.reporterISO3} → {flow.partnerISO}
+                    {flow.isRetaliation && ' (Retaliation)'}
+                  </strong>
+                </div>
+                <div>Value: {flow.value.toLocaleString()}</div>
+                <div>Change: 
+                  <span style={{ 
+                    color: flow.value < flow.baseTotal ? '#ff8080' : '#80ff80' 
+                  }}>
+                    {(((flow.value - flow.baseTotal) / flow.baseTotal) * 100).toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+            {getCountryFlows().length === 0 && (
+              <p>No trade data available for this country.</p>
+            )}
+          </div>
+          
+          {/* Summary statistics for selected country */}
+          {getCountryFlows().length > 0 && (
+            <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.3)', paddingTop: '10px' }}>
+              <h4>Trade Summary:</h4>
+              <p>
+                Total Trade Volume: {
+                  getCountryFlows().reduce((sum, flow) => sum + flow.value, 0).toLocaleString()
+                }
+              </p>
+              <p>
+                Impact of {(tariffRate * 100).toFixed(0)}% Tariff: {
+                  ((getCountryFlows().reduce((sum, flow) => sum + flow.value, 0) - 
+                    getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0)) / 
+                    getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0) * 100).toFixed(2)
+                }%
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Keep the existing arc info panel when an arc is selected */}
+      {selectedArc && !selectedCountry && (
         <div style={infoStyle}>
           <button onClick={() => setSelectedArc(null)} style={closeBtn}>×</button>
           <h3>{selectedArc.reporterISO3} → {selectedArc.partnerISO}</h3>
@@ -507,6 +548,16 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
           </p>
         </div>
       )}
+
+      {/* Spin control button */}
+      <button 
+        onClick={toggleSpinning}
+        style={spinButtonStyle}
+        data-spin-control="true"
+        title={isGlobeSpinning ? "Pause rotation" : "Resume rotation"}
+      >
+        {isGlobeSpinning ? "⏸" : "⟳"}
+      </button>
     </div>
   );
 }
