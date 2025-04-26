@@ -331,7 +331,7 @@ export default function AboutPage() {
         textAlign: 'center'
       }}>
         <p style={{ marginBottom: '0.5rem' }}>
-          Created by Eric Li
+          Created by Eric Ly
         </p>
         <a 
           href="https://lyyeric.tech" 
