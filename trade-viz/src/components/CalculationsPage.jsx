@@ -47,7 +47,7 @@ const CalculationsPage = () => {
             fontSize: '1.1rem',
             color: '#000000'
           }}>
-            Retaliation Impact = -0.8 × (1.0 - e<sup>1.8 × rawImpact</sup>)
+            Retaliation Impact = -0.8 × (1.0 - e<sup>1.65 × rawImpact</sup>)
           </p>
         </div>
         <p>Based on 2018-2020 data, retaliation typically amplifies economic impacts by 60-70%.</p>

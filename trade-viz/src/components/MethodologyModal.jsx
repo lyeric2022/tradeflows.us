@@ -107,7 +107,7 @@ export default function MethodologyModal({ show, onClose }) {
           fontFamily: 'monospace',
           border: '1px solid rgba(33, 150, 243, 0.3)'
         }}>
-          <strong>Retaliation Impact</strong> = -0.8 × (1.0 - e<sup>1.8 × rawImpact</sup>)
+          <strong>Retaliation Impact</strong> = -0.8 × (1.0 - e<sup>1.65 × rawImpact</sup>)
         </div>
         
         <p>

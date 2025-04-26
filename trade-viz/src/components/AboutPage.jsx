@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function AboutPage() {
   const featureList = [
-    'Interactive tariff rate adjustment from 0% to 50%',
+    'Interactive tariff rate adjustment from 0% to 150%',
     'Trade retaliation toggle to model reciprocal tariffs',
     'Real-time impact calculation on trade volumes and GDP',
     'Country-specific trade flow analysis',
@@ -229,7 +229,7 @@ export default function AboutPage() {
             fontSize: '1rem',
             color: '#fff'
           }}>
-            Retaliation Impact = -0.8 × (1.0 - e<sup>1.8 × rawImpact</sup>)
+            Retaliation Impact = -0.8 × (1.0 - e<sup>1.65 × rawImpact</sup>)
           </div>
           <p>
             Based on 2018-2020 trade war data, retaliation typically amplifies economic impacts by 60-70%. 
