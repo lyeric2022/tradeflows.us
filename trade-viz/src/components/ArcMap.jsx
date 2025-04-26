@@ -11,7 +11,7 @@ import {
 } from '../utils/arcCalculations';
 import MethodologyModal from './MethodologyModal';
 import TariffControls from './TariffControls';
-import * as THREE from 'three';
+import useGlobeMomentum from '../hooks/useGlobeMomentum';
 
 /**
  * ArcMap with tariff simulation and GDP impact demo.
@@ -32,12 +32,11 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
   const [retaliationEnabled, setRetaliationEnabled] = useState(false); 
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
-  const [selectedArc, setSelectedArc] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [countryData, setCountryData] = useState(null);
   const [showMethodology, setShowMethodology] = useState(false);
   // Add this new state to track globe spinning status
-  const [isGlobeSpinning, setIsGlobeSpinning] = useState(true);
+  const { isGlobeSpinning, toggleSpinning } = useGlobeMomentum(globeEl);
   
   // Add a new state for country points
   const [countryPoints, setCountryPoints] = useState([]);
@@ -66,7 +65,6 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
       const controls = globeEl.current.controls();
       const newSpinState = !controls.autoRotate;
       controls.autoRotate = newSpinState;
-      setIsGlobeSpinning(newSpinState);
     }
   }, []);
   
@@ -82,7 +80,7 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
     setSelectedCountry(country);
     
     // Reset arc selection when selecting a country
-    setSelectedArc(null);
+    // setSelectedArc(null);
     
     // Smoothly move camera to selected country
     if (globeEl.current) {
@@ -103,6 +101,22 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
       arc.reporterISO3 === iso || arc.partnerISO === iso
     );
   }, [selectedCountry, simArcs]);
+
+  // Add this helper function to calculate weighted average elasticity
+  const getWeightedElasticity = (flows) => {
+    if (!flows || flows.length === 0) return 0;
+    
+    let totalValue = 0;
+    let weightedSum = 0;
+    
+    flows.forEach(flow => {
+      // Use baseTotal as weight (original trade value)
+      totalValue += flow.baseTotal;
+      weightedSum += (flow.elasticity * flow.baseTotal);
+    });
+    
+    return totalValue > 0 ? weightedSum / totalValue : 0;
+  };
 
   // 1) Load & enrich CSV
   useEffect(() => {
@@ -281,7 +295,6 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
       if (globeEl.current) {
         // Stop auto-rotation after user interaction
         globeEl.current.controls().autoRotate = false;
-        setIsGlobeSpinning(false);
       }
     };
     
@@ -297,70 +310,65 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
   // Styles for the spin control button
   const spinButtonStyle = {
     position: 'absolute',
-    top: '20px',  // Changed from bottom to top
+    bottom: '20px',  // Adjusted for better mobile positioning
     right: '20px',
     backgroundColor: isGlobeSpinning ? 'rgba(30, 174, 152, 0.8)' : 'rgba(0, 0, 0, 0.7)',
     color: 'white',
     border: 'none',
     borderRadius: '50%',
-    width: '50px',
-    height: '50px',
+    width: '40px',
+    height: '40px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     zIndex: 10,
     boxShadow: '0 0 10px rgba(0,0,0,0.5)',
-    transition: 'background-color 0.3s ease'
+    transition: 'background-color 0.3s ease',
+    fontSize: '20px',
+    opacity: 0.7
   };
 
-  // Fix the toggle spinning function
-  const toggleSpinning = useCallback(() => {
-    if (globeEl.current) {
-      // Get direct reference to controls
-      const controls = globeEl.current.controls();
-      
-      // Toggle state based on the current state
-      const newSpinState = !isGlobeSpinning;
-      console.log("Current state:", isGlobeSpinning, "New state:", newSpinState);
-      
-      // Directly set the auto-rotate property 
-      controls.autoRotate = newSpinState;
-      
-      // Force an immediate update to the controls
-      controls.update();
-      
-      // Update React state to reflect the change
-      setIsGlobeSpinning(newSpinState);
-    }
-  }, [isGlobeSpinning]);
-
-  // Update the info panel styles to position on the right side
+  // First, let's update the info panel style to be more responsive
   const infoStyle = {
     position: 'absolute',
-    top: '20px',
-    right: '80px', // Changed from left to right, with space for spin button
-    background: 'rgba(0,0,0,0.75)',
+    top: '10px',
+    right: '10px',
+    background: 'rgba(0, 0, 0, 0.7)',
     color: 'white',
     padding: '15px',
-    borderRadius: '8px',
-    maxWidth: '300px',
-    maxHeight: '80vh',
+    borderRadius: '6px',
+    maxWidth: '350px',
+    width: 'calc(100% - 20px)',
+    maxHeight: 'calc(100vh - 100px)',
     overflowY: 'auto',
     zIndex: 10,
-    boxShadow: '0 0 15px rgba(0,0,0,0.5)'
+    boxShadow: '0 2px 15px rgba(0,0,0,0.5)',
+    fontSize: '14px',
+    '@media (max-width: 600px)': {
+      maxWidth: 'calc(100% - 20px)',
+      right: '10px',
+      top: '10px',
+      padding: '10px',
+      fontSize: '12px'
+    }
   };
 
   const closeBtn = {
     position: 'absolute',
     top: '5px',
     right: '10px',
-    background: 'none',
+    background: 'transparent',
     border: 'none',
     color: 'white',
-    fontSize: '24px',
+    fontSize: '22px',
     cursor: 'pointer',
-    padding: '0 5px'
+    padding: '2px 8px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: '1'
   };
 
   // Loading / Error states
@@ -420,20 +428,16 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         ref={globeEl}
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
         arcsData={simArcs}
-        
-        // Updated point properties
         pointsData={countryPoints}
         pointColor={d => selectedCountry && d.iso3 === selectedCountry.iso3 
           ? 'orange' 
           : 'white'}
-        pointAltitude={0.005} // Reduced altitude to make points shorter
+        pointAltitude={0.005}
         pointRadius={d => selectedCountry && d.iso3 === selectedCountry.iso3 
-          ? 0.8  // Increased radius for selected country
-          : 0.4} // Increased radius for unselected countries
+          ? 0.8
+          : 0.4}
         pointLabel={d => d.iso3}
         onPointClick={handleCountryClick}
-        
-        // Keep existing arc properties
         arcColor={d => {
           const normalizedValue = normalize(d.value, min, max);
           const intensity = 0.4 + (normalizedValue * 0.6);
@@ -470,17 +474,16 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
             <div>Change: ${(((d.value - d.baseTotal) / d.baseTotal) * 100).toFixed(1)}%</div>
           </div>
         `}
-        onArcClick={d => setSelectedArc(d)}
       />
       
-      {/* Country info panel - add data attribute for selection */}
+      {/* Enhanced country info panel when a country is selected */}
       {selectedCountry && (
         <div style={infoStyle} data-info-panel="true">
           <button onClick={() => setSelectedCountry(null)} style={closeBtn}>×</button>
-          <h3>{selectedCountry.iso3}</h3>
+          <h3 style={{ marginTop: 0 }}>{selectedCountry.iso3}</h3>
           
-          <h4>Trade Flows:</h4>
-          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <h4 style={{ marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '5px' }}>Trade Flows:</h4>
+          <div style={{ maxHeight: '50vh', overflowY: 'auto', paddingRight: '5px' }}>
             {getCountryFlows().map((flow, idx) => (
               <div key={idx} style={{ 
                 borderBottom: '1px solid rgba(255,255,255,0.2)', 
@@ -490,13 +493,17 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
                 <div>
                   <strong>
                     {flow.reporterISO3} → {flow.partnerISO}
-                    {flow.isRetaliation && ' (Retaliation)'}
+                    {flow.isRetaliation && <span style={{ color: '#ff9966' }}> (Retaliation)</span>}
                   </strong>
                 </div>
                 <div>Value: {flow.value.toLocaleString()}</div>
+                <div>Original: {flow.baseTotal.toLocaleString()}</div>
+                {flow.elasticity && <div>Elasticity: {flow.elasticity.toFixed(2)}</div>}
                 <div>Change: 
                   <span style={{ 
-                    color: flow.value < flow.baseTotal ? '#ff8080' : '#80ff80' 
+                    color: flow.value < flow.baseTotal ? '#ff8080' : '#80ff80',
+                    fontWeight: 'bold',
+                    marginLeft: '4px'
                   }}>
                     {(((flow.value - flow.baseTotal) / flow.baseTotal) * 100).toFixed(2)}%
                   </span>
@@ -511,45 +518,63 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
           {/* Summary statistics for selected country */}
           {getCountryFlows().length > 0 && (
             <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.3)', paddingTop: '10px' }}>
-              <h4>Trade Summary:</h4>
-              <p>
-                Total Trade Volume: {
+              <h4 style={{ marginBottom: '8px' }}>Trade Summary:</h4>
+              <p style={{ margin: '5px 0' }}>
+                Total Volume: {
                   getCountryFlows().reduce((sum, flow) => sum + flow.value, 0).toLocaleString()
                 }
               </p>
-              <p>
-                Impact of {(tariffRate * 100).toFixed(0)}% Tariff: {
-                  ((getCountryFlows().reduce((sum, flow) => sum + flow.value, 0) - 
-                    getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0)) / 
-                    getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0) * 100).toFixed(2)
-                }%
+              <p style={{ margin: '5px 0' }}>
+                <span title="Weighted average based on trade volumes">
+                  Weighted Elasticity: {getWeightedElasticity(getCountryFlows()).toFixed(2)}
+                </span>
+                <span style={{ 
+                  marginLeft: '6px',
+                  fontSize: '12px',
+                  color: '#999'
+                }}>
+                  (volume-weighted average)
+                </span>
               </p>
+              <p style={{ margin: '5px 0' }}>
+                Impact of {(tariffRate * 100).toFixed(0)}% Tariff:{' '}
+                <span style={{
+                  color: getCountryFlows().reduce((sum, flow) => sum + flow.value, 0) < 
+                        getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0) ? 
+                        '#ff8080' : '#80ff80',
+                  fontWeight: 'bold'
+                }}>
+                  {
+                    ((getCountryFlows().reduce((sum, flow) => sum + flow.value, 0) - 
+                      getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0)) / 
+                      getCountryFlows().reduce((sum, flow) => sum + flow.baseTotal, 0) * 100).toFixed(2)
+                  }%
+                </span>
+              </p>
+              
+              {/* Add an elasticity explainer */}
+              <div style={{ 
+                marginTop: '10px', 
+                fontSize: '12px', 
+                background: 'rgba(33, 150, 243, 0.1)', 
+                padding: '8px', 
+                borderRadius: '4px',
+                borderLeft: '3px solid #2196F3',
+              }}>
+                <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>About Trade Elasticity</p>
+                <p style={{ margin: '0' }}>
+                  Elasticity values vary by product category. Countries trading in products with 
+                  higher elasticity (like vehicles at {4.48.toFixed(2)}) will see larger impacts than 
+                  those trading in products with lower elasticity (like aircraft at {0.11.toFixed(2)}).
+                  This weighted average reflects this country's specific trade composition.
+                </p>
+              </div>
             </div>
           )}
         </div>
       )}
       
-      {/* Keep the existing arc info panel when an arc is selected */}
-      {selectedArc && !selectedCountry && (
-        <div style={infoStyle}>
-          <button onClick={() => setSelectedArc(null)} style={closeBtn}>×</button>
-          <h3>{selectedArc.reporterISO3} → {selectedArc.partnerISO}</h3>
-          {selectedArc.isRetaliation && <p style={{ color: '#ff9966' }}>Retaliation Flow</p>}
-          <p>Trade Volume: {selectedArc.value.toLocaleString()}</p>
-          <p>Original Volume: {selectedArc.baseTotal.toLocaleString()}</p>
-          <p>Elasticity: {selectedArc.elasticity?.toFixed(2) ?? 'n/a'}</p>
-          <p>
-            Change at {(tariffRate * 100).toFixed(0)}% tariff:{' '}
-            <span style={{ 
-              color: selectedArc.value < selectedArc.baseTotal ? '#ff8080' : '#80ff80' 
-            }}>
-              {(((selectedArc.value - selectedArc.baseTotal) / selectedArc.baseTotal) * 100).toFixed(2)}%
-            </span>
-          </p>
-        </div>
-      )}
-
-      {/* Spin control button */}
+      {/* The spin control button - make it more mobile-friendly */}
       <button 
         onClick={toggleSpinning}
         style={spinButtonStyle}

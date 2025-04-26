@@ -88,7 +88,7 @@ export default function TariffControls({
           {retaliationEnabled && <span style={{ color: '#ff9966', marginLeft: '5px' }}> (with retaliation)</span>}
         </div>
         <div>
-          GDP Impact (est.): <span style={{ color: gdpPctImpact < 0 ? '#ff8080' : '#80ff80' }}>{gdpPctImpact.toFixed(2)}%</span>
+          USA GDP Impact (est.): <span style={{ color: gdpPctImpact < 0 ? '#ff8080' : '#80ff80' }}>{gdpPctImpact.toFixed(2)}%</span>
           {retaliationEnabled && <span style={{ color: '#ff9966', marginLeft: '5px' }}> (with retaliation)</span>}
         </div>
         <div style={{ marginTop: '8px', textAlign: 'left' }}>
