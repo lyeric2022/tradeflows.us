@@ -1,4 +1,3 @@
-# fetch_trade.py
 """
 Downloads and caches UN Comtrade flow data by reporter, partner, HS6 group, and flow (M/X).
 Only fetches if the target CSV does not already exist.
@@ -16,19 +15,20 @@ if not COMTRADE_KEY:
 OUT_CSV = 'data/processed/trade_flows.csv'
 YEAR = 2023
 REPORTERS = [842]
-PARTNERS = [
-    # Original partners
-    156, 392, 124, 276, 0,  # CHN, JPN, CAN, DEU, WLD
-    
-    # Additional 20 countries
-    840, 826, 250, 380, 724,  # USA, GBR, FRA, ITA, ESP
-    484, 76, 410, 356, 360,   # MEX, BRA, KOR, IND, IDN
-    36, 554, 710, 458, 764,   # AUS, NZL, ZAF, MYS, THA
-    608, 792, 643, 682, 784   # PHL, TUR, RUS, SAU, ARE
-]  # Expanded list of major trading partners
-HS_GROUPS = ['85', '88']            # HS sections
-FLOWS = {'M': 'M', 'X': 'X'}        # M=import, X=export
 
+# Top 50 U.S. goods trading partners by total trade in 2023 (ISO 3166-1 numeric codes)
+PARTNERS = [
+    156, 484, 704, 276, 392, 372, 124, 410, 158, 380,
+    356, 764, 458, 756, 360, 250,  40, 752, 348, 710,
+    376, 246, 643, 608, 566, 203, 616, 682,  12, 578,
+    862, 702, 170, 724, 818, 152,  32,  76, 826,  56,
+     36, 344, 528, 784, 792, 642, 804, 414, 634, 604
+]
+
+# All HS chapter codes from '01' through '99'
+HS_GROUPS = [f"{i:02d}" for i in range(1, 100)]
+
+FLOWS = {'M': 'M', 'X': 'X'}  # M=import, X=export
 
 def main():
     os.makedirs(os.path.dirname(OUT_CSV), exist_ok=True)
@@ -36,14 +36,20 @@ def main():
         print(f"⇢ {OUT_CSV} already exists; skipping fetch.")
         return
 
+    # Calculate total operations for progress tracking
+    total_requests = len(REPORTERS) * len(PARTNERS) * len(HS_GROUPS) * len(FLOWS)
+    completed = 0
+    last_percentage = 0
+    
+    print(f"Starting fetch of {total_requests} total API requests...")
+
     frames = []
     for reporter in REPORTERS:
-        for partner in PARTNERS:
+        for partner in tqdm(PARTNERS, desc="Partners", leave=False):
             for hs in HS_GROUPS:
                 for flow_code, flow in FLOWS.items():
                     print(f"→ {reporter}->{partner}  HS{hs} {YEAR} flow:{flow_code}")
                     try:
-                        # Use previewFinalData for basic access without subscription key
                         df = comtradeapicall.previewFinalData(
                             typeCode='C', 
                             freqCode='A',
@@ -53,24 +59,32 @@ def main():
                             partnerCode=str(partner),
                             cmdCode=hs, 
                             flowCode=flow,
-                            partner2Code=None,    # Add missing parameter
-                            customsCode=None,     # Add missing parameter 
-                            motCode=None,         # Add missing parameter
-                            maxRecords=50000, 
+                            partner2Code=None,
+                            customsCode=None,
+                            motCode=None,
+                            maxRecords=50000,
                             format_output='JSON',
-                            aggregateBy=None,     # Optional parameter
-                            breakdownMode='classic', # Optional parameter
-                            countOnly=None,       # Optional parameter
-                            includeDesc=True)     # Optional parameter
-                        
-                        # Same updates needed for the getFinalData call if you uncomment it
-                        
+                            aggregateBy=None,
+                            breakdownMode='classic',
+                            countOnly=None,
+                            includeDesc=True
+                        )
                         df['flowCode'] = flow_code
                         frames.append(df)
                     except Exception as e:
                         print(f"Error fetching data: {e}")
+                    
+                    # Update progress tracking
+                    completed += 1
+                    percentage = int((completed / total_requests) * 100)
+                    
+                    # Log every 5% change
+                    if percentage >= last_percentage + 5 or percentage == 100:
+                        last_percentage = percentage
+                        print(f"✓ Progress: {percentage}% complete ({completed}/{total_requests} requests)")
 
     if frames:
+        print("Merging all data frames...")
         merged = pd.concat(frames, ignore_index=True)
         merged.to_csv(OUT_CSV, index=False)
         print(f"✓ Saved merged CSV → {OUT_CSV}  ({len(merged)} rows)")
