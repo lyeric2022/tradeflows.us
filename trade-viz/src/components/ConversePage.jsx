@@ -1,19 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Enhanced SVG Send Icon component - Updated Path
-const SendIcon = ({ color = 'currentColor', size = 20 }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} fill={color}>
-    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-  </svg>
-);
-
 // Trump avatar component
 const TrumpAvatar = ({ size = 36 }) => (
   <div style={{
     width: size,
     height: size,
     borderRadius: '50%',
-    backgroundColor: '#e41e3f',
+    backgroundColor: '#e41e3f', // Trump red
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -33,11 +26,11 @@ const UserAvatar = ({ size = 36 }) => (
     width: size,
     height: size,
     borderRadius: '50%',
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#E8F0FE', // Lighter blue
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#1E88E5',
+    color: '#1E88E5', // Primary blue
     fontWeight: 'bold',
     fontSize: size * 0.4,
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -46,6 +39,14 @@ const UserAvatar = ({ size = 36 }) => (
     P
   </div>
 );
+
+// Fact Check Icon Component
+const FactCheckIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '6px', flexShrink: 0 }}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#34a853"/> {/* Green check */}
+  </svg>
+);
+
 
 const ConversePage = () => {
   const [message, setMessage] = useState('');
@@ -66,10 +67,17 @@ const ConversePage = () => {
     setIsLoadingHistory(true);
     setError(null);
     try {
+      // Ensure the backend endpoint is correct
       const response = await fetch('http://127.0.0.1:8000/trump-chat-history');
       if (!response.ok) throw new Error('Failed to fetch initial chat history');
       const data = await response.json();
-      setChatHistory(data.messages);
+      // Map incoming history to ensure consistent structure
+      const formattedHistory = data.messages.map(msg => ({
+        ...msg,
+        // Ensure backward compatibility if old format messages exist
+        content: msg.content || msg.trump_response,
+      }));
+      setChatHistory(formattedHistory);
     } catch (err) {
       console.error('Error fetching initial history:', err);
       setError('Failed to load conversation history. Please try refreshing.');
@@ -82,58 +90,86 @@ const ConversePage = () => {
   useEffect(() => {
     fetchInitialHistory();
 
-    const wsUrl = 'ws://127.0.0.1:8000/ws/trump-chat';
-    let ws = new WebSocket(wsUrl);
-    websocket.current = ws;
-
-    ws.onopen = () => {
-      console.log('WebSocket Connected');
-      setIsConnected(true);
-      setError(null);
-    };
-
-    ws.onclose = (event) => {
-      console.log('WebSocket Disconnected:', event.reason, event.code);
-      setIsConnected(false);
-      // Optional reconnect logic
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket Error:', error);
-      setError('Connection error. Please check the server or refresh.');
-      setIsConnected(false);
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const newMessage = JSON.parse(event.data);
-        
-        // If it's a "typing" indicator message
-        if (newMessage.type === 'typing') {
-          setIsTyping(newMessage.isTyping);
-          return;
-        }
-        
-        setChatHistory(prevHistory => {
-          if (prevHistory.length > 0) {
-            const lastMsg = prevHistory[prevHistory.length - 1];
-            if (lastMsg.timestamp === newMessage.timestamp && lastMsg.content === newMessage.content && lastMsg.isUser === newMessage.isUser) {
-              return prevHistory;
-            }
-          }
-          // When receiving a response, turn off typing indicator
-          setIsTyping(false);
-          return [...prevHistory, newMessage];
-        });
-      } catch (e) {
-        console.error('Failed to parse incoming message:', event.data, e);
+    let ws = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectTimeout = 3000; // 3 seconds
+    
+    const connectWebSocket = () => {
+      if (reconnectAttempts >= maxReconnectAttempts) {
+        setError('Could not connect to chat server after multiple attempts.');
+        return;
       }
-    };
+      
+      const wsUrl = 'ws://127.0.0.1:8000/ws/trump-chat';
+      ws = new WebSocket(wsUrl);
+      websocket.current = ws;
+      
+      ws.onopen = () => {
+        console.log('WebSocket Connected');
+        setIsConnected(true);
+        setError(null);
+        reconnectAttempts = 0; // Reset attempts on successful connection
+      };
+      
+      ws.onclose = (event) => {
+        console.log('WebSocket Disconnected:', event.reason, event.code);
+        setIsConnected(false);
+        
+        // Try to reconnect unless this was a normal closure
+        if (event.code !== 1000) {
+          reconnectAttempts++;
+          setTimeout(connectWebSocket, reconnectTimeout);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket Error:', error);
+        setError('Connection error. Please check the server or refresh.');
+        setIsConnected(false);
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const newMessage = JSON.parse(event.data);
+          console.log('Message received:', newMessage);
 
+          // Handle typing indicator messages
+          if (newMessage.type === 'typing_indicator') {
+            setIsTyping(newMessage.isTyping);
+            return; // Don't add this to chat history
+          }
+
+          // Add regular messages to chat history
+          setChatHistory(prevHistory => {
+            // Check if message already exists to prevent duplicates
+            const isDuplicate = prevHistory.some(msg => 
+              (msg.timestamp === newMessage.timestamp) && 
+              ((msg.content === newMessage.content) || 
+               (msg.trump_response === newMessage.trump_response))
+            );
+            
+            if (isDuplicate) return prevHistory;
+            
+            // Add and sort messages
+            const updatedHistory = [...prevHistory, newMessage];
+            return updatedHistory.sort((a, b) => 
+              new Date(a.timestamp) - new Date(b.timestamp)
+            );
+          });
+        } catch (e) {
+          console.error('Failed to parse message:', e);
+        }
+      };
+    };
+    
+    connectWebSocket();
+    
     return () => {
       if (ws) {
         console.log('Closing WebSocket connection');
-        ws.close();
+        // Use a custom code to indicate normal closure
+        ws.close(1000, 'Component unmounting');
       }
     };
   }, [fetchInitialHistory]);
@@ -156,7 +192,7 @@ const ConversePage = () => {
     if (messageContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messageContainerRef.current;
       const scrolledToBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 10;
-      
+
       setShowScrollButton(!scrolledToBottom);
       isAtBottomRef.current = scrolledToBottom;
     }
@@ -189,11 +225,12 @@ const ConversePage = () => {
     setIsSending(true);
 
     try {
+      // Send message in the format expected by the backend
       websocket.current.send(JSON.stringify({ message: currentMessage }));
       setMessage('');
       // Simulate typing indicator on submit
       setIsTyping(true);
-      
+
       // Focus back on input after sending
       if (inputRef.current) {
         inputRef.current.focus();
@@ -203,23 +240,38 @@ const ConversePage = () => {
       setError("Failed to send message. Please try again.");
       setIsTyping(false);
     } finally {
-      setTimeout(() => setIsSending(false), 300);
+      // Keep isSending true until a response is received or timeout
+      // setIsSending(false); // Removed timeout, let onmessage handle it
     }
   };
 
+   // Update isSending state when a response is received
+   useEffect(() => {
+    if (chatHistory.length > 0) {
+      const lastMessage = chatHistory[chatHistory.length - 1];
+      // If the last message is from the assistant, we assume sending is complete
+      if (!lastMessage.isUser) {
+        setIsSending(false);
+      }
+    }
+  }, [chatHistory]);
+
+
   // --- Styles ---
   const theme = {
-    primary: '#1E88E5',
-    secondary: '#e41e3f',
+    primary: '#1E88E5', // Blue
+    secondary: '#e41e3f', // Red
     background: '#f7f9fc',
     cardBg: '#ffffff',
     text: '#2a2a2a',
     textSecondary: '#606770',
     border: '#e8eaed',
-    success: '#34a853',
+    success: '#34a853', // Green for fact check
     error: '#ea4335',
     messageUser: '#E3F2FD',
     messageTrump: '#ffebee',
+    factCheckBg: '#f1f8e9', // Light green background for fact check
+    factCheckBorder: '#dcedc8', // Lighter green border
   };
 
   const styles = {
@@ -264,17 +316,17 @@ const ConversePage = () => {
       alignItems: 'center',
       gap: '1rem',
     },
-    headerTitle: { 
-      margin: 0, 
-      fontSize: '1.35rem', 
+    headerTitle: {
+      margin: 0,
+      fontSize: '1.35rem',
       fontWeight: 700,
       background: `linear-gradient(135deg, ${theme.secondary} 0%, #f44336 100%)`,
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
     },
-    headerSubtitle: { 
-      margin: '0.2rem 0 0', 
-      color: theme.textSecondary, 
+    headerSubtitle: {
+      margin: '0.2rem 0 0',
+      color: theme.textSecondary,
       fontSize: '0.9rem'
     },
     connectionStatus: {
@@ -336,7 +388,7 @@ const ConversePage = () => {
     messageGroup: (isUser) => ({
       display: 'flex',
       flexDirection: isUser ? 'row-reverse' : 'row',
-      alignItems: 'flex-start',
+      alignItems: 'flex-start', // Align avatar to the top of the bubble
       gap: '12px',
       maxWidth: '90%',
       alignSelf: isUser ? 'flex-end' : 'flex-start',
@@ -345,6 +397,7 @@ const ConversePage = () => {
       display: 'flex',
       flexDirection: 'column',
       gap: '4px',
+      width: '100%', // Allow content to take full width within the group limit
     },
     messageHeader: (isUser) => ({
       display: 'flex',
@@ -373,14 +426,35 @@ const ConversePage = () => {
       whiteSpace: 'pre-wrap',
       wordBreak: 'break-word',
       position: 'relative',
-      maxWidth: '100%',
+      // maxWidth: '100%', // Let the content define width up to the group max
       borderBottomLeftRadius: isUser ? '1rem' : '0.25rem',
       borderBottomRightRadius: isUser ? '0.25rem' : '1rem',
       transform: 'translateY(0)',
       animation: 'fadeIn 0.3s ease-out',
     }),
+    // Style for the fact check section within the assistant bubble
+    factCheckSection: {
+      marginTop: '1rem',
+      paddingTop: '0.75rem',
+      borderTop: `1px dashed ${theme.secondary}40`, // Dashed separator using Trump red with alpha
+      fontSize: '0.9rem',
+      color: theme.textSecondary, // Use secondary text color for fact check
+    },
+    factCheckHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      fontWeight: 600,
+      fontSize: '0.8rem',
+      color: theme.success, // Green color for the header
+      marginBottom: '4px',
+    },
+    factCheckContent: {
+      lineHeight: '1.4',
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    },
     typingIndicator: {
-      display: 'flex', 
+      display: 'flex',
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: '12px',
@@ -461,18 +535,27 @@ const ConversePage = () => {
       width: '40px',
       height: '40px',
       borderRadius: '50%',
-      border: 'none',
-      backgroundColor: theme.primary,
-      color: 'white', // Icon color
+      border: `1px solid ${theme.border}`, // Add a subtle border
+      backgroundColor: theme.cardBg, // Change background to white (or a light color)
       cursor: 'pointer',
       transition: 'background-color 0.2s, transform 0.1s, box-shadow 0.1s',
       flexShrink: 0,
-      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)', // Softer shadow
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)', // Slightly softer shadow
+      padding: 0,
+      '&:hover': { // Optional: Add hover effect
+        backgroundColor: '#f1f3f4',
+      }
     },
     sendButtonDisabled: {
-      backgroundColor: '#bdbdbd', // Slightly adjusted disabled color
+      backgroundColor: '#f1f1f1', // Lighter grey for disabled state
+      borderColor: '#e0e0e0',
       cursor: 'not-allowed',
-      opacity: 0.7,
+      opacity: 0.8,
+    },
+    sendIconImage: {
+      width: '20px',
+      height: '20px',
+      display: 'block',
     },
     scrollToBottomButton: {
       position: 'absolute', // Position relative to chatArea
@@ -512,14 +595,14 @@ const ConversePage = () => {
       maxWidth: '400px',
       boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
     },
-    emptyChatIcon: { 
-      fontSize: '3.5rem', 
-      marginBottom: '1rem', 
-      textShadow: '0 2px 5px rgba(0, 0, 0, 0.1)' 
+    emptyChatIcon: {
+      fontSize: '3.5rem',
+      marginBottom: '1rem',
+      textShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
     },
-    emptyChatTitle: { 
-      margin: '0 0 0.75rem', 
-      color: theme.text, 
+    emptyChatTitle: {
+      margin: '0 0 0.75rem',
+      color: theme.text,
       fontWeight: 700,
       fontSize: '1.3rem'
     },
@@ -535,7 +618,7 @@ const ConversePage = () => {
             <TrumpAvatar size={42} />
             <div>
               <h1 style={styles.headerTitle}>TRUMP CHAT</h1>
-              <p style={styles.headerSubtitle}>Public conversation with the Trump AI</p>
+              <p style={styles.headerSubtitle}>Public conversation with the Trump AI & Fact Checker</p> {/* Updated subtitle */}
             </div>
           </div>
           <div style={styles.connectionStatus}>
@@ -544,7 +627,7 @@ const ConversePage = () => {
           </div>
         </div>
 
-        {/* Chat Area (Scrollable internally) */}
+        {/* Chat Area */}
         <div style={styles.chatArea}>
           {error && (
             <div style={styles.errorBox}>
@@ -555,10 +638,11 @@ const ConversePage = () => {
             </div>
           )}
 
-          {/* Message List (This is the scrollable part) */}
+          {/* Message List */}
           <div
             ref={messageContainerRef}
             style={styles.messageList}
+            className="messageList" // Add class for CSS scrollbar styling
           >
             {/* Loading/Empty States */}
             {isLoadingHistory && chatHistory.length === 0 && (
@@ -571,20 +655,20 @@ const ConversePage = () => {
                 <p style={{marginTop: '1rem'}}>Loading conversation history...</p>
               </div>
             )}
-            
-            {!isLoadingHistory && chatHistory.length === 0 && (
+
+            {!isLoadingHistory && chatHistory.length === 0 && !error && (
               <div style={styles.emptyChat}>
                 <div style={styles.emptyChatIcon}>🇺🇸</div>
                 <h3 style={styles.emptyChatTitle}>Start the Conversation</h3>
                 <p>Ask President Trump a question to begin chatting.</p>
               </div>
             )}
-            
+
             {/* Render Messages */}
             {chatHistory.map((item, index) => (
               <div key={`${item.timestamp}-${index}`} style={styles.messageGroup(item.isUser)}>
                 {item.isUser ? <UserAvatar /> : <TrumpAvatar />}
-                
+
                 <div style={styles.messageContent}>
                   <div style={styles.messageHeader(item.isUser)}>
                     <span style={styles.messageAuthor(item.isUser)}>
@@ -595,12 +679,26 @@ const ConversePage = () => {
                     </span>
                   </div>
                   <div style={styles.messageBubble(item.isUser)}>
-                    {item.content}
+                    {/* Render user message content OR Trump response */}
+                    {item.isUser ? item.content : item.trump_response}
+
+                    {/* Conditionally render Fact Check section for assistant messages */}
+                    {!item.isUser && item.fact_check && (
+                      <div style={styles.factCheckSection}>
+                        <div style={styles.factCheckHeader}>
+                          <FactCheckIcon size={14} />
+                          Fact Check
+                        </div>
+                        <div style={styles.factCheckContent}>
+                          {item.fact_check}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
-            
+
             {/* Typing Indicator */}
             {isTyping && ( // Conditionally render the typing indicator container
               <div style={styles.typingIndicator}>
@@ -627,7 +725,7 @@ const ConversePage = () => {
           </button>
         </div>
 
-        {/* Input Area (Fixed at the bottom) */}
+        {/* Input Area */}
         <div style={styles.inputArea}>
           <form onSubmit={handleSubmit} style={styles.inputForm}>
             <input
@@ -636,21 +734,25 @@ const ConversePage = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={isConnected ? "Ask President Trump something..." : "Connecting..."}
-              disabled={!isConnected || isSending}
+              disabled={!isConnected || isSending} // Disable input while sending/waiting
               style={{
                 ...styles.textInput,
               }}
             />
             <button
               type="submit"
-              disabled={!isConnected || !message.trim() || isSending}
+              disabled={!isConnected || !message.trim() || isSending} // Disable button while sending/waiting
               style={{
                 ...styles.sendButton,
                 ...((!isConnected || !message.trim() || isSending) ? styles.sendButtonDisabled : {})
               }}
               title="Send Message"
             >
-              <SendIcon size={20} color="white"/> {/* Explicitly set icon color */}
+              <img
+                src="/send-msg.png"
+                alt="Send"
+                style={styles.sendIconImage}
+              />
             </button>
           </form>
           <div style={styles.rateLimitNote}>
@@ -658,8 +760,7 @@ const ConversePage = () => {
           </div>
         </div>
       </div>
-      {/* Add Keyframes via CSS: Create a CSS file (e.g., ConversePage.css) and import it,
-          or use a CSS-in-JS library like styled-components or Emotion */}
+      {/* Add Keyframes via CSS */}
       <style>{`
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
