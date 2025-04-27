@@ -288,9 +288,49 @@ class ConnectionManager:
 # Initialize the connection manager
 manager = ConnectionManager()
 
+# --- Rate Limiting ---
+class RateLimiter:
+    def __init__(self, max_messages=3, window_seconds=60):
+        # Store message timestamps per client
+        self.client_messages = {}
+        self.max_messages = max_messages
+        self.window_seconds = window_seconds
+    
+    def check_rate_limit(self, client_id):
+        """
+        Check if client has exceeded rate limit
+        Returns: (bool) True if allowed, False if limit exceeded
+        """
+        current_time = datetime.now(timezone.utc)
+        
+        # Initialize timestamps list for new clients
+        if client_id not in self.client_messages:
+            self.client_messages[client_id] = []
+        
+        # Filter out old timestamps outside the current window
+        window_start = current_time - timedelta(seconds=self.window_seconds)
+        self.client_messages[client_id] = [
+            ts for ts in self.client_messages[client_id] 
+            if ts > window_start
+        ]
+        
+        # Check if client is over limit
+        if len(self.client_messages[client_id]) >= self.max_messages:
+            return False
+        
+        # Add current timestamp and allow message
+        self.client_messages[client_id].append(current_time)
+        return True
+
+# Initialize rate limiter
+rate_limiter = RateLimiter(max_messages=3, window_seconds=60)
+
 @app.websocket("/ws/trump-chat")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)  # Use manager.connect instead of websocket.accept()
+    await manager.connect(websocket)
+    # Use client IP or some identifier as client_id
+    client_id = f"{websocket.client.host}:{websocket.client.port}"
+    
     try:
         while True:
             data = await websocket.receive_text()
@@ -299,6 +339,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 if "message" in message_data and isinstance(message_data["message"], str):
                     user_message = message_data["message"].strip()
                     if user_message:
+                        # Check rate limit before processing
+                        if not rate_limiter.check_rate_limit(client_id):
+                            # Send rate limit exceeded message
+                            await websocket.send_text(json.dumps({
+                                "type": "rate_limit_exceeded",
+                                "message": "You can only send 3 messages per minute. Please wait before sending more.",
+                                "timestamp": datetime.now(timezone.utc).isoformat()
+                            }))
+                            continue
+                        
+                        # Process message as before
+                        # ...existing code to store and process message...
                         # Store message in database
                         current_time_utc = datetime.now(timezone.utc)
                         try:

@@ -62,6 +62,11 @@ const ConversePage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const inputRef = useRef(null);
 
+  // Add these state variables near your other state declarations
+  const [typingStartTime, setTypingStartTime] = useState(null);
+  const [typingTimer, setTypingTimer] = useState(null);
+  const MIN_TYPING_DURATION = 2000; // 2 seconds minimum typing duration
+
   // Fetch initial history
   const fetchInitialHistory = useCallback(async () => {
     setIsLoadingHistory(true);
@@ -134,9 +139,40 @@ const ConversePage = () => {
           const newMessage = JSON.parse(event.data);
           console.log('Message received:', newMessage);
 
+          // Handle rate limit exceeded messages
+          if (newMessage.type === 'rate_limit_exceeded') {
+            setError(newMessage.message);
+            // Clear error after 5 seconds
+            setTimeout(() => setError(null), 5000);
+            return;
+          }
+
           // Handle typing indicator messages
           if (newMessage.type === 'typing_indicator') {
-            setIsTyping(newMessage.isTyping);
+            if (newMessage.isTyping) {
+              // Start typing - record the time and set typing state
+              setTypingStartTime(Date.now());
+              setIsTyping(true);
+              
+              // Clear any existing timer
+              if (typingTimer) clearTimeout(typingTimer);
+            } else {
+              // Stop typing, but ensure minimum duration
+              const timeTyping = typingStartTime ? Date.now() - typingStartTime : 0;
+              
+              if (timeTyping < MIN_TYPING_DURATION) {
+                // If minimum duration hasn't elapsed, set a timer
+                const remainingTime = MIN_TYPING_DURATION - timeTyping;
+                const timer = setTimeout(() => {
+                  setIsTyping(false);
+                  setTypingTimer(null);
+                }, remainingTime);
+                setTypingTimer(timer);
+              } else {
+                // Minimum time elapsed, can stop immediately
+                setIsTyping(false);
+              }
+            }
             return; // Don't add this to chat history
           }
 
@@ -459,14 +495,8 @@ const ConversePage = () => {
       alignItems: 'flex-start',
       gap: '12px',
       maxWidth: '90%',
-      alignSelf: 'flex-start',
-      opacity: isTyping ? 1 : 0,
-      height: isTyping ? 'auto' : 0,
-      overflow: 'hidden',
-      transition: 'all 0.3s ease',
-      paddingLeft: '1.5rem', // Match messageList padding if needed
-      paddingRight: '1.5rem',
-      marginTop: '1.5rem', // Add gap if needed
+      margin: '1rem 1.5rem',
+      alignSelf: 'flex-start'
     },
     typingBubble: {
       padding: '1rem',
@@ -476,14 +506,13 @@ const ConversePage = () => {
       alignItems: 'center',
       gap: '4px',
       borderBottomLeftRadius: '0.25rem',
-      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
     },
     dot: {
       width: '8px',
       height: '8px',
       borderRadius: '50%',
       backgroundColor: theme.secondary,
-      opacity: 0.6,
       animation: 'bounce 1.2s infinite',
     },
     dot1: {
@@ -700,13 +729,47 @@ const ConversePage = () => {
             ))}
 
             {/* Typing Indicator */}
-            {isTyping && ( // Conditionally render the typing indicator container
-              <div style={styles.typingIndicator}>
+            {isTyping && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                maxWidth: '90%',
+                margin: '1rem 1.5rem',
+                alignSelf: 'flex-start'
+              }}>
                 <TrumpAvatar />
-                <div style={styles.typingBubble}>
-                  <div style={{...styles.dot, ...styles.dot1, animation: 'bounce 1.2s infinite 0s'}}></div>
-                  <div style={{...styles.dot, ...styles.dot2, animation: 'bounce 1.2s infinite 0.2s'}}></div>
-                  <div style={{...styles.dot, ...styles.dot3, animation: 'bounce 1.2s infinite 0.4s'}}></div>
+                <div style={{
+                  padding: '1rem',
+                  borderRadius: '1rem',
+                  backgroundColor: theme.messageTrump,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  borderBottomLeftRadius: '0.25rem',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                }}>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: theme.secondary,
+                    animation: 'bounce 1.2s infinite 0s'
+                  }}></div>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: theme.secondary,
+                    animation: 'bounce 1.2s infinite 0.2s'
+                  }}></div>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: theme.secondary,
+                    animation: 'bounce 1.2s infinite 0.4s'
+                  }}></div>
                 </div>
               </div>
             )}
