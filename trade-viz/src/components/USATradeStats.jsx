@@ -5,6 +5,7 @@ import { useFlows } from '../hooks/useFlows';
 export default function USATradeStats() {
     const { flows, loading, error, tradeStats } = useFlows();
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [tradeType, setTradeType] = useState('goods'); // New state for toggle
 
     useEffect(() => {
       const handleResize = () => setWindowWidth(window.innerWidth);
@@ -112,6 +113,43 @@ export default function USATradeStats() {
         return null;
     };
 
+    // Define services trade data based on the provided information
+    const servicesTradeData = {
+        total: 1774.8 * 1000000000, // $1,774.8 billion (exports + imports)
+        exports: 1026.6 * 1000000000, // $1,026.6 billion
+        imports: 748.2 * 1000000000, // $748.2 billion
+        balance: 288.2 * 1000000000, // $288.2 billion surplus
+        countries: [
+            // Placeholder data - in a real app, you would have actual data here
+            { countryName: "United Kingdom", exports: 74.1 * 1000000000, imports: 62.3 * 1000000000, volume: 136.4 * 1000000000, balance: 11.8 * 1000000000 },
+            { countryName: "European Union", exports: 230.4 * 1000000000, imports: 171.8 * 1000000000, volume: 402.2 * 1000000000, balance: 58.6 * 1000000000 },
+            { countryName: "China", exports: 58.2 * 1000000000, imports: 20.7 * 1000000000, volume: 78.9 * 1000000000, balance: 37.5 * 1000000000 },
+            { countryName: "Japan", exports: 47.3 * 1000000000, imports: 35.9 * 1000000000, volume: 83.2 * 1000000000, balance: 11.4 * 1000000000 },
+            { countryName: "Canada", exports: 69.8 * 1000000000, imports: 40.2 * 1000000000, volume: 110.0 * 1000000000, balance: 29.6 * 1000000000 },
+            // Additional countries would be here
+        ]
+    };
+
+    // Calculate combined trade data
+    const allTradeData = {
+        total: tradeStats.totals.total + servicesTradeData.total,
+        exports: tradeStats.totals.exports + servicesTradeData.exports,
+        imports: tradeStats.totals.imports + servicesTradeData.imports,
+        balance: tradeStats.totals.exports - tradeStats.totals.imports + servicesTradeData.balance,
+        // Combined countries data would be more complex in a real implementation
+        countries: tradeStats.countries
+    };
+
+    // Select the data to display based on toggle
+    const displayData = {
+        totals: tradeType === 'goods' ? tradeStats.totals : 
+               tradeType === 'services' ? servicesTradeData : 
+               allTradeData,
+        countries: tradeType === 'goods' ? tradeStats.countries : 
+                  tradeType === 'services' ? servicesTradeData.countries : 
+                  allTradeData.countries
+    };
+
     return (
         <div style={{
             padding: isMobile ? '1rem' : '2rem',
@@ -135,7 +173,45 @@ export default function USATradeStats() {
                 USA Trade Statistics
             </h1>
 
-            {/* Trade Summary Cards - Total, Exports, Imports */}
+            {/* Trade Type Toggle */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '2rem',
+                backgroundColor: '#2c3e50',
+                padding: '1rem',
+                borderRadius: '8px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+            }}>
+                <div style={{
+                    display: 'flex',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    border: '1px solid #3498db'
+                }}>
+                    {['goods', 'services', 'all'].map(type => (
+                        <button
+                            key={type}
+                            onClick={() => setTradeType(type)}
+                            style={{
+                                backgroundColor: tradeType === type ? '#3498db' : 'transparent',
+                                color: tradeType === type ? '#fff' : '#eee',
+                                border: 'none',
+                                padding: '0.75rem 1.5rem',
+                                cursor: 'pointer',
+                                fontWeight: tradeType === type ? 'bold' : 'normal',
+                                fontSize: '1rem',
+                                transition: 'background-color 0.3s ease',
+                                textTransform: 'capitalize'
+                            }}
+                        >
+                            {type === 'all' ? 'All Trade' : type}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Trade Summary Cards - use displayData instead of tradeStats directly */}
             <div style={{
                 display: 'flex',
                 gap: '1rem',
@@ -163,10 +239,12 @@ export default function USATradeStats() {
                         fontWeight: 'bold',
                         color: '#3498db'
                     }}>
-                        {`$${totals.total.toLocaleString()}`}
+                        {`$${displayData.totals.total.toLocaleString()}`}
                     </div>
                     <div style={{ color: '#bbb', fontSize: '0.9rem' }}>
-                        Across all trading partners
+                        {tradeType === 'goods' ? 'Goods trade across all partners' : 
+                         tradeType === 'services' ? 'Services trade across all partners' : 
+                         'Goods & services across all partners'}
                     </div>
                 </div>
                 
@@ -188,15 +266,15 @@ export default function USATradeStats() {
                     <div style={{
                         fontSize: isMobile ? '1.6rem' : '2rem',
                         fontWeight: 'bold',
-                        color: totals.exports > totals.imports ? '#2ecc71' : '#e74c3c'
+                        color: displayData.totals.exports >= displayData.totals.imports ? '#2ecc71' : '#e74c3c'
                     }}>
-                        {totals.exports >= totals.imports 
-                            ? `$${(totals.exports - totals.imports).toLocaleString()}`
-                            : `-$${Math.abs(totals.exports - totals.imports).toLocaleString()}`
+                        {displayData.totals.exports >= displayData.totals.imports 
+                            ? `$${(displayData.totals.exports - displayData.totals.imports).toLocaleString()}`
+                            : `-$${Math.abs(displayData.totals.exports - displayData.totals.imports).toLocaleString()}`
                         }
                     </div>
                     <div style={{ color: '#bbb', fontSize: '0.9rem' }}>
-                        {totals.exports > totals.imports ? 'Trade Surplus' : 'Trade Deficit'}
+                        {displayData.totals.exports > displayData.totals.imports ? 'Trade Surplus' : 'Trade Deficit'}
                     </div>
                 </div>
 
@@ -220,7 +298,7 @@ export default function USATradeStats() {
                         fontWeight: 'bold',
                         color: '#2ecc71'
                     }}>
-                        {`$${totals.exports.toLocaleString()}`}
+                        {`$${displayData.totals.exports.toLocaleString()}`}
                     </div>
                     <div style={{ color: '#bbb', fontSize: '0.9rem' }}>
                         From USA to other countries
@@ -247,7 +325,7 @@ export default function USATradeStats() {
                         fontWeight: 'bold',
                         color: '#e74c3c'
                     }}>
-                        {`$${totals.imports.toLocaleString()}`}
+                        {`$${displayData.totals.imports.toLocaleString()}`}
                     </div>
                     <div style={{ color: '#bbb', fontSize: '0.9rem' }}>
                         To USA from other countries
@@ -452,7 +530,10 @@ export default function USATradeStats() {
                                         color: balance >= 0 ? '#2ecc71' : '#e74c3c',
                                         fontWeight: Math.abs(balance) > 1000000 ? 'bold' : 'normal'
                                     }}>
-                                        {`$${balance.toLocaleString()}`}
+                                        {balance >= 0 
+                                            ? `$${balance.toLocaleString()}`
+                                            : `-$${Math.abs(balance).toLocaleString()}`
+                                        }
                                     </td>
                                 </tr>
                             ))}

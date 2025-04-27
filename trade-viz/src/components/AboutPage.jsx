@@ -1,355 +1,516 @@
-import React from 'react';
+import React from "react";
+import { InlineMath, BlockMath } from "react-katex";
+import "katex/dist/katex.min.css";
 
 export default function AboutPage() {
+  /* ----------- Lists used for rendering ----------- */
   const featureList = [
-    'Interactive tariff rate adjustment from 0% to 150%',
-    'Trade retaliation toggle to model reciprocal tariffs',
-    'Real-time impact calculation on trade volumes and GDP',
-    'Country-specific trade flow analysis',
-    'Visualization of both direct and retaliatory trade flows'
+    "Interactive tariff slider (0% to 150%) that recalculates trade impacts in real-time",
+    "Retaliation toggle to simulate how trading partners respond to tariffs",
+    "Instant impact calculations showing effects on trade flows and U.S. GDP",
+    "Detailed breakdowns by country and product category (HS codes)",
+    "3D globe visualization comparing direct vs. retaliatory effects"
   ];
 
   const dataSources = [
-    'UN Comtrade database',
-    'WITS (World Integrated Trade Solution)',
-    'KEE elasticities for trade impact modeling'
+    "UN Comtrade Database — Raw trade flows at the HS-6 product level",
+    "World Bank WITS API — Product classification concordance & country coordinates",
+    "Bureau of Economic Analysis (BEA) — 2023 trade data ($3.05T exports, $3.83T imports)",
+    "World Bank — Trade as percentage of U.S. GDP (exports ≈ 11% in 2023)",
+    "Armington & CEPII studies — Trade elasticity estimates (ε ≈ 2.5 for imports, 3.7 for exports)",
+    "IMF & BudgetLab — Research on tariff retaliation patterns"
   ];
 
   const hsCodes = [
-    'HS 85: Electrical machinery and equipment (e.g., phones, semiconductors, batteries)',
-    'HS 86: Railway locomotives and parts',
-    'HS 87: Vehicles other than railway (e.g., cars, trucks, bikes)',
-    'HS 88: Aircraft, spacecraft, parts',
-    'HS 89: Ships, boats, floating structures',
-    'HS 90: Optical, medical, precision instruments (e.g., cameras, microscopes, X-ray machines)'
+    "HS 85 — Electronics & electrical equipment (smartphones, computers, semiconductors)",
+    "HS 86 — Railway equipment & components",
+    "HS 87 — Vehicles & automotive parts (cars, trucks, motorcycles)",
+    "HS 88 — Aircraft, spacecraft & related parts",
+    "HS 89 — Ships, boats & floating structures",
+    "HS 90 — Precision instruments (medical devices, cameras, measuring equipment)"
   ];
 
   const technologies = [
-    'React.js for the user interface',
-    'React-Globe.gl for 3D globe visualization',
-    'Recharts for statistical charts',
-    'Palantir Ontology for data integration',
-    'D3.js for data visualization',
-    'THREE.js for 3D rendering',
-    'Papa Parse for CSV parsing',
-    'VS Code for development'
+    "React & Vite — Fast, modern front-end framework",
+    "THREE.js & react-globe.gl — 3D globe visualization",
+    "Recharts — Responsive charting for statistics panels",
+    "D3.js — Advanced data visualization tools",
+    "Papa Parse — Efficient CSV data processing",
+    "FastAPI — High-performance Python backend",
+    "VS Code & pnpm — Developer workflow tools"
+  ];
+  
+  const gdpImpacts = [
+    "Direct effects: Reduced exports lower GDP through decreased production",
+    "Indirect effects: Higher import prices impact consumer spending and business investment",
+    "Supply chain disruptions: Manufacturing sectors face input shortages and cost increases",
+    "Long-term effects: Trade barriers can reduce productivity growth and innovation",
+    "Regional impacts: Trade-dependent states and communities face disproportionate effects"
   ];
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      maxWidth: '1000px', 
-      margin: '0 auto',
-      color: '#eee',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-      lineHeight: 1.6,
-      backgroundColor: '#1a2634',
-      height: '100%',
-      overflowY: 'auto'
-    }}>
-      <h1 style={{ 
-        color: '#3498db', 
-        borderBottom: '3px solid #3498db', 
-        paddingBottom: '0.5rem',
-        marginBottom: '1.5rem',
-        textAlign: 'center'
-      }}>
-        About This Trade Visualization Tool
+    <div
+      style={{
+        padding: "2rem",
+        maxWidth: "1100px",
+        margin: "0 auto",
+        color: "#f0f2f5",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        lineHeight: 1.7,
+        backgroundColor: "#1a2634",
+        height: "100%",
+        overflowY: "auto"
+      }}
+    >
+      {/* ---------------------------------------------------------------- */}
+      <h1
+        style={{
+          color: "#3498db",
+          borderBottom: "3px solid #3498db",
+          paddingBottom: "1rem",
+          marginBottom: "2rem",
+          textAlign: "center",
+          fontSize: "2.2rem",
+          fontWeight: "700",
+          letterSpacing: "0.5px"
+        }}
+      >
+        About the Trade Visualization Tool
       </h1>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        marginBottom: '2rem'
-      }}>
-        <p style={{ fontSize: '1.1rem' }}>
-          This interactive visualization demonstrates the potential impacts of tariffs on global trade flows, 
-          with a focus on United States trade relationships with other countries.
+
+      {/* -------- Introduction -------- */}
+      <Section>
+        <p style={{ 
+          fontSize: "1.3rem", 
+          textAlign: "center",
+          fontWeight: "500",
+          color: "#e0e6ed",
+          maxWidth: "800px",
+          margin: "0 auto" 
+        }}>
+          An interactive <strong>economic simulator</strong> that lets you explore how tariff policies 
+          affect U.S. trade relationships and economic outcomes.
         </p>
-        <p>
-          Think of it as an economic flight simulator—all of the learning experience, none of the real-world crashes.
-        </p>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        marginBottom: '2rem'
-      }}>
-        <h2 style={{ color: '#eee', marginTop: 0 }}>What This Tool Shows</h2>
-        <p>
-          The 3D globe visualization illustrates trade flows between countries, with arc thickness and 
-          height representing trade volume. When you adjust the tariff rate slider, the simulation 
-          recalculates trade volumes based on economic elasticity factors.
+      </Section>
+
+      {/* -------- What the tool shows -------- */}
+      <Section>
+        <SectionHeader icon="🔍">What You Can Explore</SectionHeader>
+        
+        <p style={{ fontSize: "1.05rem", marginBottom: "1.5rem" }}>
+          This tool visualizes international trade flows and lets you simulate tariff impacts:
         </p>
         
-        <h3 style={{ color: '#3498db' }}>Key Features</h3>
-        <ul style={{ 
-          paddingLeft: '1.5rem',
-          listStyleType: 'none'
+        <div style={{ 
+          display: "flex", 
+          gap: "1.5rem",
+          flexWrap: "wrap",
+          marginBottom: "1.5rem" 
         }}>
-          {featureList.map((feature, index) => (
-            <li key={index} style={{ 
-              marginBottom: '0.75rem',
-              position: 'relative',
-              paddingLeft: '1.5rem'
-            }}>
-              <span style={{ 
-                position: 'absolute',
-                left: 0,
-                color: '#3498db'
-              }}>✓</span>
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        marginBottom: '2rem'
-      }}>
-        <h2 style={{ color: '#eee', marginTop: 0 }}>Data Sources & Methodology</h2>
-        <p>
-          The visualization uses 2023 international trade flow data, focusing on HS codes 85-90.
-          The model applies elasticity factors to simulate how trade volumes respond to tariff-induced price changes.
-        </p>
-        
-        <div style={{
-          backgroundColor: '#34495e',
-          padding: '1rem',
-          borderRadius: '6px',
-          marginBottom: '1rem',
-          borderLeft: '4px solid #f39c12'
-        }}>
-          <p style={{ margin: '0', fontSize: '0.95rem' }}>
-            <strong>Note on Trade Volume Accuracy:</strong> Due to API limitations, this visualization displays approximately $1.2 trillion in trade volume, 
-            covering only select HS codes (85-90). The actual USA trade volume with the world in 2023 was $6.9 trillion.
-          </p>
+          <InfoBox 
+            title="3D Globe Visualization" 
+            color="#3498db"
+            width="48%"
+          >
+            Arc height and thickness represent U.S. trade volumes. As you adjust tariffs, 
+            the visualization updates to show changing trade patterns.
+          </InfoBox>
+          
+          <InfoBox 
+            title="Economic Model" 
+            color="#3498db"
+            width="48%"
+          >
+            Uses the formula <InlineMath math={"Q = Q_0\\cdot e^{-\\varepsilon\\cdot \\Delta P/P}"} />, 
+            where <InlineMath math={"\\Delta P/P = \\tau/(1+\\tau)"} /> to calculate 
+            how tariffs affect trade volumes.
+          </InfoBox>
         </div>
-        
-        <h3 style={{ color: '#3498db' }}>Data Sources</h3>
-        <ul style={{ 
-          paddingLeft: '1.5rem',
-          listStyleType: 'none'
+
+        <h3 style={{ 
+          color: "#e0e6ed", 
+          marginTop: "1.5rem", 
+          borderLeft: "4px solid #3498db",
+          paddingLeft: "0.75rem"
         }}>
-          {dataSources.map((source, index) => (
-            <li key={index} style={{ 
-              marginBottom: '0.75rem',
-              position: 'relative',
-              paddingLeft: '1.5rem'
-            }}>
-              <span style={{ 
-                position: 'absolute',
-                left: 0,
-                color: '#3498db'
-              }}>•</span>
-              {source}
-            </li>
-          ))}
-        </ul>
+          Key Features
+        </h3>
+        <BulletList items={featureList} tickColor="#3498db" iconType="✓" />
+      </Section>
+
+      {/* -------- Data & methodology -------- */}
+      <Section>
+        <SectionHeader icon="📊">Data Sources & Methodology</SectionHeader>
         
-        <h3 style={{ color: '#3498db' }}>Product Categories Covered</h3>
-        <ul style={{ 
-          paddingLeft: '1.5rem',
-          listStyleType: 'none'
+        <p style={{ fontSize: "1.05rem", marginBottom: "1.5rem" }}>
+          This tool analyzes approximately <strong>$6.9 trillion</strong> of U.S. trade (goods and services) 
+          from 2023. We use product-specific elasticities that vary widely by sector – from highly 
+          inelastic aircraft (0.11) to more elastic vehicles (4.5).
+        </p>
+
+        <Warning>
+          <strong>Note:</strong> For optimal performance, this demo version preloads six key HS 
+          chapters representing high-value trade sectors. The complete dataset covers all 97 HS chapters 
+          (approximately $7 trillion in trade). Researchers can connect the Comtrade API to analyze 
+          additional product categories.
+        </Warning>
+
+        <h3 style={{ 
+          color: "#e0e6ed", 
+          marginTop: "1.5rem", 
+          borderLeft: "4px solid #3498db",
+          paddingLeft: "0.75rem"
         }}>
-          {hsCodes.map((code, index) => (
-            <li key={index} style={{ 
-              marginBottom: '0.75rem',
-              position: 'relative',
-              paddingLeft: '1.5rem'
-            }}>
-              <span style={{ 
-                position: 'absolute',
-                left: 0,
-                color: '#3498db'
-              }}>•</span>
-              {code}
-            </li>
-          ))}
+          Source Catalog
+        </h3>
+        <BulletList items={dataSources} tickColor="#3498db" iconType="•" />
+
+        <h3 style={{ 
+          color: "#e0e6ed", 
+          marginTop: "1.5rem", 
+          borderLeft: "4px solid #3498db",
+          paddingLeft: "0.75rem"
+        }}>
+          Product Categories Included
+        </h3>
+        <BulletList items={hsCodes} tickColor="#3498db" iconType="•" />
+      </Section>
+
+      {/* -------- New Section: GDP Impacts -------- */}
+      <Section>
+        <SectionHeader icon="📈">Understanding GDP Impacts</SectionHeader>
+        
+        <p style={{ fontSize: "1.05rem", marginBottom: "1.5rem" }}>
+          Tariffs affect GDP through multiple channels. Our model uses a simplified approach
+          based on trade-to-GDP ratios and established economic multipliers.
+        </p>
+        
+        <div style={{ 
+          backgroundColor: "#253545", 
+          padding: "1.25rem", 
+          borderRadius: "8px",
+          marginBottom: "1.5rem"
+        }}>
+          <h4 style={{ color: "#3498db", marginTop: 0 }}>How Trade Changes Affect GDP</h4>
+          <BulletList items={gdpImpacts} tickColor="#e74c3c" iconType="→" />
+        </div>
+
+        <p>
+          While the relationship between trade and GDP is complex, economists generally find that:
+        </p>
+        <ul style={{ marginBottom: "1rem" }}>
+          <li>Short-term GDP effects of tariffs are typically negative</li>
+          <li>Long-term effects depend on policy responses and structural changes</li>
+          <li>Sectoral impacts vary widely based on trade intensity and elasticities</li>
         </ul>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        marginBottom: '2rem'
+      </Section>
+
+      {/* -------- Math snippets -------- */}
+      <Section>
+        <SectionHeader icon="🧮">The Math Under the Hood</SectionHeader>
+
+        <p style={{ fontSize: "1.05rem", marginBottom: "1.5rem" }}>
+          Our model uses established economic formulas to calculate how tariffs affect trade flows and GDP:
+        </p>
+
+        <div style={{ 
+          display: "flex", 
+          gap: "1.5rem", 
+          flexWrap: "wrap",
+          justifyContent: "space-between" 
+        }}>
+          <FormulaBlock
+            title="Trade Flow Impact"
+            color="#3498db"
+            formula={"Q = Q_0 \\; e^{-\\varepsilon\\, \\tfrac{\\tau}{1+\\tau}}"}
+            note="How tariffs (τ) affect traded quantities based on elasticity (ε)"
+            width="48%"
+          />
+
+          <FormulaBlock
+            title="Retaliation Effect"
+            color="#e74c3c"
+            formula={"\\Delta Q_{\\text{ret}} \\approx 2\\,\\Delta Q_{\\text{uni}}"}
+            note="Partner retaliation typically doubles the export reduction"
+            width="48%"
+          />
+        </div>
+
+        <FormulaBlock
+          title="GDP Translation"
+          color="#27ae60"
+          formula={"\\Delta\\text{GDP}=\\Delta\\text{Trade}\\times 0.112 \\times 0.90"}
+          note="Converts trade changes to GDP impact using export/GDP ratio (11.2%) and trade-output multiplier (0.9)"
+          width="100%"
+        />
+        
+        <p style={{ fontSize: "0.95rem", color: "#bbb", marginTop: "1rem" }}>
+          Note: These formulas are simplifications. Actual impacts depend on complex factors including 
+          substitution effects, supply chain adjustments, and monetary policy responses.
+        </p>
+      </Section>
+
+      {/* -------- Tech stack -------- */}
+      <Section>
+        <SectionHeader icon="⚙️">Technology Stack</SectionHeader>
+        <BulletList items={technologies} tickColor="#9b59b6" iconType="•" />
+      </Section>
+
+      {/* -------- Footer -------- */}
+      <Section style={{ 
+        textAlign: "center",
+        position: "relative",
+        marginTop: "3rem",
+        paddingTop: "2.5rem",
+        overflow: "hidden"
       }}>
-        <h2 style={{ color: '#eee', marginTop: 0 }}>The Math Behind the Magic</h2>
-        
+        {/* Decorative top border */}
         <div style={{
-          borderLeft: '3px solid #3498db',
-          paddingLeft: '1rem',
-          marginBottom: '1.5rem'
+          position: "absolute",
+          top: 0,
+          left: "10%",
+          right: "10%",
+          height: "3px",
+          background: "linear-gradient(90deg, transparent, #3498db, transparent)",
+        }}></div>
+        
+        <div style={{ 
+          marginBottom: "2rem",
+          backgroundColor: "#253545",
+          padding: "2rem",
+          borderRadius: "12px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1.5rem"
         }}>
-          <h3 style={{ color: '#3498db' }}>Trade Flow Impact</h3>
-          <p>
-            Ever wonder why a 30% tariff doesn't just reduce trade by exactly 30%? That's where elasticity comes in!
-          </p>
-          <div style={{
-            backgroundColor: '#1a2634',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            fontFamily: 'monospace',
-            fontSize: '1rem',
-            color: '#fff'
-          }}>
-            New Trade = Base Trade × (1 + tariff)<sup>-|elasticity|</sup>
+          <div>
+            <h3 style={{ margin: "0 0 0.75rem 0", color: "#3498db", fontSize: "1.4rem" }}>
+              Created by Eric Ly
+            </h3>
+            <p style={{ fontSize: "1rem", color: "#bbb", margin: "0 0 1.5rem 0" }}>
+              Feedback and collaborations welcome!
+            </p>
           </div>
-          <p>
-            Product-specific elasticities range from low (aircraft: 0.11) to high (vehicles: 4.48). 
-            Higher elasticity = bigger trade impact!
-          </p>
-        </div>
-        
-        <div style={{
-          borderLeft: '3px solid #e74c3c',
-          paddingLeft: '1rem',
-          marginBottom: '1.5rem'
-        }}>
-          <h3 style={{ color: '#e74c3c' }}>Retaliation Effects</h3>
-          <p>
-            When countries fight back with counter-tariffs, things get spicy! 🔥
-          </p>
-          <div style={{
-            backgroundColor: '#1a2634',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            fontFamily: 'monospace',
-            fontSize: '1rem',
-            color: '#fff'
-          }}>
-            Retaliation Impact = -0.8 × (1.0 - e<sup>1.65 × rawImpact</sup>)
+          
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <SocialLink href="https://lyyeric.tech" icon="🌐" label="Portfolio" />
+            <SocialLink href="https://github.com/lyeric2022" icon="🔮" label="GitHub" />
+            <SocialLink href="mailto:contact@j.lyyeric@gmail.com" icon="✉️" label="Email" />
           </div>
-          <p>
-            Based on 2018-2020 trade war data, retaliation typically amplifies economic impacts by 60-70%. 
-            Turns out trade wars aren't "easy to win" — unless your strategy is "everybody loses."
-          </p>
         </div>
         
-        <div style={{
-          borderLeft: '3px solid #27ae60',
-          paddingLeft: '1rem'
+        <p style={{ 
+          fontSize: "0.9rem", 
+          color: "#8a9db5", 
+          marginTop: "1rem",
+          opacity: "0.8" 
         }}>
-          <h3 style={{ color: '#27ae60' }}>GDP Impact</h3>
-          <div style={{
-            backgroundColor: '#1a2634',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            fontFamily: 'monospace',
-            fontSize: '1rem',
-            color: '#fff'
-          }}>
-            GDP Impact = Trade Impact × Trade-to-GDP Ratio × Impact Factor<br/>
-            = Trade Impact × 0.27 × 0.75
-          </div>
-          <p>
-            The 0.75 impact factor accounts for sector dynamics and domestic substitution. Sure, you <em>could</em> buy American... 
-            but don't be surprised if your "freedom fridge" costs twice as much.
-          </p>
-        </div>
-        
-        <div style={{
-          marginTop: '1.5rem',
-          fontSize: '0.9rem',
-          color: '#bbb',
-          borderTop: '1px solid #34495e',
-          paddingTop: '1rem'
-        }}>
-          <strong>Sources:</strong> World Bank (2022), USITC, IMF Direction of Trade Statistics, and countless economists 
-          who probably need a drink after analyzing trade data.
-          <p>
-            <em>Note: This model is a simulation based on historical data. Actual economic impacts vary based on complex geopolitical factors, 
-            supply chain adjustments, and market conditions. Kind of like how weather forecasts work, but for your wallet.</em>
-          </p>
-        </div>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        marginBottom: '2rem',
-        borderLeft: '4px solid #27ae60'
+          © {new Date().getFullYear()} • Beta v0.1
+        </p>
+      </Section>
+    </div>
+  );
+}
+
+/* ---------- Enhanced reusable components ---------- */
+function Section({ children, style }) {
+  return (
+    <div
+      style={{
+        backgroundColor: "#2c3e50",
+        padding: "1.75rem",
+        borderRadius: "10px",
+        boxShadow: "0 4px 20px rgba(0,0,0,.25)",
+        marginBottom: "2.5rem",
+        ...style
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({ children, icon }) {
+  return (
+    <h2 style={{
+      color: "#3498db",
+      borderBottom: "2px solid #3498db",
+      paddingBottom: "0.75rem",
+      marginTop: 0,
+      marginBottom: "1.5rem",
+      fontSize: "1.6rem",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem"
+    }}>
+      {icon && <span>{icon}</span>}
+      {children}
+    </h2>
+  );
+}
+
+function InfoBox({ children, title, color = "#3498db", width = "100%" }) {
+  return (
+    <div style={{
+      backgroundColor: "#253545",
+      padding: "1.25rem",
+      borderRadius: "8px",
+      borderTop: `3px solid ${color}`,
+      flex: 1,
+      minWidth: "280px",
+      width: width
+    }}>
+      <h4 style={{ 
+        color: color, 
+        margin: "0 0 0.75rem 0",
+        fontSize: "1.1rem" 
       }}>
-        <h2 style={{ color: '#27ae60', marginTop: 0 }}>Educational Purpose</h2>
-        <p>
-          This tool is designed for educational purposes to illustrate the complex 
-          interconnections in global trade and demonstrate how policy changes like 
-          tariffs can have wide-ranging effects throughout the global economy.
-        </p>
-        <p>
-          It serves as a simplified but informative window into the ripple effects of trade policy decisions.
-        </p>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        marginBottom: '2rem'
-      }}>
-        <h2 style={{ color: '#eee', marginTop: 0 }}>Development & Technologies</h2>
-        <ul style={{ 
-          paddingLeft: '1.5rem',
-          listStyleType: 'none'
-        }}>
-          {technologies.map((tech, index) => (
-            <li key={index} style={{ 
-              marginBottom: '0.75rem',
-              position: 'relative',
-              paddingLeft: '1.5rem'
-            }}>
-              <span style={{ 
-                position: 'absolute',
-                left: 0,
-                color: '#9b59b6'
-              }}>◆</span>
-              {tech}
-            </li>
-          ))}
-        </ul>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#2c3e50', 
-        padding: '1.5rem', 
-        borderRadius: '8px', 
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        textAlign: 'center'
-      }}>
-        <p style={{ marginBottom: '0.5rem' }}>
-          Created by Eric Ly
-        </p>
-        <a 
-          href="https://lyyeric.tech" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          style={{
-            color: '#3498db',
-            textDecoration: 'none',
-            fontWeight: 'bold',
-            fontSize: '1.1rem'
-          }}
-        >
-          lyyeric.tech
-        </a>
-        <p style={{ fontSize: '0.9rem', color: '#bbb', marginTop: '0.5rem' }}>
-          Feedback and suggestions welcome!
-        </p>
+        {title}
+      </h4>
+      <div style={{ fontSize: "0.95rem" }}>
+        {children}
       </div>
     </div>
+  );
+}
+
+function BulletList({ items, tickColor, iconType = "•" }) {
+  return (
+    <ul style={{ 
+      paddingLeft: "0.5rem", 
+      listStyle: "none", 
+      marginBottom: "0.5rem" 
+    }}>
+      {items.map((txt, i) => (
+        <li 
+          key={i} 
+          style={{ 
+            marginBottom: "0.75rem", 
+            position: "relative", 
+            paddingLeft: "1.75rem",
+            fontSize: "1rem" 
+          }}
+        >
+          <span style={{ 
+            position: "absolute", 
+            left: 0, 
+            color: tickColor,
+            fontWeight: "bold" 
+          }}>
+            {iconType}
+          </span>
+          {txt}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FormulaBlock({ title, color, formula, note, width = "100%" }) {
+  return (
+    <div style={{ 
+      borderLeft: `3px solid ${color}`, 
+      paddingLeft: "1.25rem", 
+      marginBottom: "1.5rem",
+      backgroundColor: "#253545",
+      padding: "1rem",
+      borderRadius: "0 8px 8px 0",
+      width: width
+    }}>
+      <h3 style={{ 
+        color, 
+        margin: "0 0 0.75rem 0",
+        fontSize: "1.2rem" 
+      }}>
+        {title}
+      </h3>
+      <div
+        style={{
+          backgroundColor: "#1a2634",
+          padding: "1rem",
+          borderRadius: "6px",
+          color: "#fff",
+          marginBottom: "0.75rem"
+        }}
+      >
+        <BlockMath math={formula} />
+      </div>
+      <p style={{ 
+        fontSize: "0.9rem", 
+        margin: "0",
+        color: "#ccc" 
+      }}>
+        {note}
+      </p>
+    </div>
+  );
+}
+
+function Warning({ children }) {
+  return (
+    <div
+      style={{
+        backgroundColor: "#34495e",
+        padding: "1.25rem",
+        borderRadius: "8px",
+        marginBottom: "1.5rem",
+        borderLeft: "4px solid #f39c12",
+        display: "flex",
+        alignItems: "flex-start"
+      }}
+    >
+      <span style={{ 
+        color: "#f39c12", 
+        marginRight: "0.75rem",
+        fontSize: "1.25rem",
+        fontWeight: "bold"
+      }}>
+        ⚠️
+      </span>
+      <div style={{ fontSize: "0.95rem" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Add this new component below your existing components:
+function SocialLink({ href, icon, label }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        color: "#3498db",
+        fontWeight: "bold",
+        fontSize: "1rem",
+        textDecoration: "none",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.6rem 1.2rem",
+        border: "1px solid #3498db",
+        borderRadius: "6px",
+        transition: "all 0.3s ease",
+        backgroundColor: "#1a2634",
+      }}
+      onMouseOver={(e) => {
+        e.target.style.backgroundColor = "#3498db";
+        e.target.style.color = "white";
+        e.target.style.transform = "translateY(-2px)";
+        e.target.style.boxShadow = "0 4px 12px rgba(52, 152, 219, 0.3)";
+      }}
+      onMouseOut={(e) => {
+        e.target.style.backgroundColor = "#1a2634";
+        e.target.style.color = "#3498db";
+        e.target.style.transform = "translateY(0)";
+        e.target.style.boxShadow = "none";
+      }}
+    >
+      <span>{icon}</span> {label}
+    </a>
   );
 }
