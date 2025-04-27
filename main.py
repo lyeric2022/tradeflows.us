@@ -84,10 +84,10 @@ async def get_chat_history():
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute(
             """
-            SELECT timestamp, is_user, content, trump_response, fact_check 
+            SELECT id, timestamp, is_user, content, trump_response, fact_check 
             FROM chat_messages 
-            ORDER BY timestamp DESC 
-            LIMIT 10
+            ORDER BY id DESC 
+            LIMIT 20
             """
         )
         messages = cursor.fetchall()
@@ -126,118 +126,72 @@ async def process_and_broadcast_message(message_content, client_id, message_id):
     # Current time in UTC
     current_time_utc = datetime.now(timezone.utc)
     
-    # Store user message in database
+    # Store user message in database - make this non-blocking
     try:
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO chat_messages (content, is_user, timestamp, trump_response, fact_check)
-                VALUES (%s, %s, %s, %s, %s)
-                """,
-                (
-                    message_content, 
-                    True, 
-                    current_time_utc.isoformat(),
-                    None,
-                    None
-                )
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-            print("User message stored in database.")
-        else:
-            print("Could not store user message - database connection failed.")
+        # Use a background task for database operations
+        asyncio.create_task(store_user_message(message_content, current_time_utc))
     except Exception as db_e:
-        print(f"Exception during database user message insert: {db_e}")
+        print(f"Exception scheduling user message storage: {db_e}")
     
-    # Call Letta for Trump's response
+    # Call Letta for Trump's response - don't block other operations
     if not letta:
         print("ERROR: Letta client not initialized")
         trump_response_content = "Sorry, I couldn't get a response from Trump right now. (API client error)"
         fact_check_content = "Fact check unavailable due to API client error."
     else:
-        trump_agent_id = "agent-e6c64060-ee1a-42ab-aadd-fed54ab9bb6c"
-        print(f"Calling Trump Agent ({trump_agent_id})")
-        response_trump = letta.agents.messages.create(
-            agent_id=trump_agent_id,
-            messages=[
-                MessageCreate(
-                    role="user",
-                    content=[TextContent(text=message_content)]
-                )
-            ]
-        )
-        print("Trump Agent Response received")
-
-        # Extract Trump response
-        trump_response_content = "Sorry, I couldn't get a response from Trump right now."
-        if hasattr(response_trump, 'messages') and response_trump.messages:
-            for msg in response_trump.messages:
+        try:
+            # Create a task for the Trump response
+            trump_agent_id = "agent-e6c64060-ee1a-42ab-aadd-fed54ab9bb6c"
+            print(f"Calling Trump Agent ({trump_agent_id})")
+            
+            # Get Trump's response
+            response_trump = await get_trump_response(trump_agent_id, message_content)
+            
+            # Extract Trump response
+            trump_response_content = "Sorry, I couldn't get a response from Trump right now."
+            if hasattr(response_trump, 'messages') and response_trump.messages:
+                for msg in response_trump.messages:
+                    if hasattr(msg, 'message_type') and msg.message_type == 'assistant_message' and hasattr(msg, 'content'):
+                        if isinstance(msg.content, list) and len(msg.content) > 0 and isinstance(msg.content[0], TextContent):
+                            trump_response_content = msg.content[0].text
+                            break
+                        elif isinstance(msg.content, str):
+                            trump_response_content = msg.content
+                            break
+        except Exception as e:
+            print(f"Error getting Trump response: {e}")
+            trump_response_content = "Sorry, I couldn't get a response from Trump right now."
+            fact_check_content = "Fact check unavailable due to API error."
+    
+    # Call Letta for Fact Checking - in parallel if possible
+    try:
+        fact_checker_agent_id = "agent-7334ad53-f9c4-4524-b299-cd307b1ffc4f"
+        fact_check_prompt = f'Fact check this message from Donald Trump: "{trump_response_content}"'
+        
+        # Get fact check response
+        response_factcheck = await get_fact_check(fact_checker_agent_id, fact_check_prompt)
+        
+        # Extract Fact Checker response
+        fact_check_content = "Fact check unavailable."
+        if hasattr(response_factcheck, 'messages') and response_factcheck.messages:
+            for msg in response_factcheck.messages:
                 if hasattr(msg, 'message_type') and msg.message_type == 'assistant_message' and hasattr(msg, 'content'):
                     if isinstance(msg.content, list) and len(msg.content) > 0 and isinstance(msg.content[0], TextContent):
-                        trump_response_content = msg.content[0].text
+                        fact_check_content = msg.content[0].text
                         break
                     elif isinstance(msg.content, str):
-                        trump_response_content = msg.content
+                        fact_check_content = msg.content
                         break
+    except Exception as e:
+        print(f"Error getting fact check: {e}")
+        fact_check_content = "Fact check unavailable due to an error."
     
-    # Call Letta for Fact Checking
-    fact_checker_agent_id = "agent-7334ad53-f9c4-4524-b299-cd307b1ffc4f"
-    fact_check_prompt = f'Fact check this message from Donald Trump: "{trump_response_content}"'
-    print(f"Calling Fact Checker Agent ({fact_checker_agent_id}) with prompt: {fact_check_prompt[:100]}...")
-
-    response_factcheck = letta.agents.messages.create(
-        agent_id=fact_checker_agent_id,
-        messages=[
-            MessageCreate(
-                role="user",
-                content=[TextContent(text=fact_check_prompt)]
-            )
-        ]
-    )
-    print("Fact Checker Response received")
-
-    # Extract Fact Checker response
-    fact_check_content = "Fact check unavailable."
-    if hasattr(response_factcheck, 'messages') and response_factcheck.messages:
-        for msg in response_factcheck.messages:
-            if hasattr(msg, 'message_type') and msg.message_type == 'assistant_message' and hasattr(msg, 'content'):
-                if isinstance(msg.content, list) and len(msg.content) > 0 and isinstance(msg.content[0], TextContent):
-                    fact_check_content = msg.content[0].text
-                    break
-                elif isinstance(msg.content, str):
-                    fact_check_content = msg.content
-                    break
-    
-    # Store assistant response in database
+    # Store assistant response in database as a background task
     try:
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO chat_messages (content, is_user, timestamp, trump_response, fact_check)
-                VALUES (%s, %s, %s, %s, %s)
-                """,
-                (
-                    None,
-                    False,
-                    current_time_utc.isoformat(),
-                    trump_response_content,
-                    fact_check_content
-                )
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-            print("Assistant message stored in database.")
-        else:
-            print("Could not store assistant message - database connection failed.")
+        asyncio.create_task(store_assistant_message(
+            trump_response_content, fact_check_content, current_time_utc))
     except Exception as db_e:
-        print(f"Exception during database assistant message insert: {db_e}")
+        print(f"Exception scheduling assistant message storage: {db_e}")
     
     # Send response to user
     response_data = {
@@ -245,6 +199,7 @@ async def process_and_broadcast_message(message_content, client_id, message_id):
         "fact_check": fact_check_content,
         "timestamp": current_time_utc.isoformat()
     }
+    
     # Broadcast Trump's response to ALL clients
     await manager.broadcast({
         "trump_response": trump_response_content,
@@ -399,3 +354,85 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         print(f"Connection closed: {websocket.client}. Total: 0")
         print("INFO:     connection closed")
+
+# Add these helper functions to make the code more modular and async-friendly
+
+async def store_user_message(message_content, timestamp):
+    """Store user message in database asynchronously"""
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO chat_messages (content, is_user, timestamp, trump_response, fact_check)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    message_content, 
+                    True, 
+                    timestamp.isoformat(),
+                    None,
+                    None
+                )
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("User message stored in database.")
+        else:
+            print("Could not store user message - database connection failed.")
+    except Exception as db_e:
+        print(f"Exception during database user message insert: {db_e}")
+
+async def store_assistant_message(trump_response, fact_check, timestamp):
+    """Store assistant message in database asynchronously"""
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO chat_messages (content, is_user, timestamp, trump_response, fact_check)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    None,
+                    False,
+                    timestamp.isoformat(),
+                    trump_response,
+                    fact_check
+                )
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("Assistant message stored in database.")
+        else:
+            print("Could not store assistant message - database connection failed.")
+    except Exception as db_e:
+        print(f"Exception during database assistant message insert: {db_e}")
+
+async def get_trump_response(agent_id, message_content):
+    """Get response from Trump agent asynchronously"""
+    return letta.agents.messages.create(
+        agent_id=agent_id,
+        messages=[
+            MessageCreate(
+                role="user",
+                content=[TextContent(text=message_content)]
+            )
+        ]
+    )
+
+async def get_fact_check(agent_id, prompt):
+    """Get fact check response asynchronously"""
+    return letta.agents.messages.create(
+        agent_id=agent_id,
+        messages=[
+            MessageCreate(
+                role="user",
+                content=[TextContent(text=prompt)]
+            )
+        ]
+    )

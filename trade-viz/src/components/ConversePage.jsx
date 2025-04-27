@@ -827,7 +827,7 @@ const ConversePage = () => {
             </button>
           </form>
           <div style={styles.rateLimitNote}>
-            Rate limit: 6 messages/minute globally. All messages are public.
+            Rate limit: 3 messages/minute globally. All messages are public. Your message may be modified if vague, offensive, or too lengthy.
           </div>
         </div>
       </div>
