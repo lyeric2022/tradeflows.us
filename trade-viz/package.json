@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cerebras/cerebras_cloud_sdk": "^1.29.0",
     "@deck.gl/react": "^9.1.11",
     "deck.gl": "^9.1.11",
     "globe.gl": "^2.41.4",
