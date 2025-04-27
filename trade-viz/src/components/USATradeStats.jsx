@@ -348,7 +348,7 @@ export default function USATradeStats() {
                     marginBottom: '1.5rem',
                     fontSize: isMobile ? '1.3rem' : '1.5rem'
                 }}>
-                    Top Trading Partners - Imports vs Exports
+                    Top Trading Partners - Imports vs Exports (Goods Only)
                 </h2>
 
                 <div style={{ width: '100%', height: isMobile ? 300 : 400 }}>
@@ -434,7 +434,7 @@ export default function USATradeStats() {
                     marginBottom: '1.5rem',
                     fontSize: isMobile ? '1.3rem' : '1.5rem'
                 }}>
-                    Detailed Country Breakdown
+                    Detailed Country Breakdown (Goods Only)
                 </h2>
 
                 <div style={{ 

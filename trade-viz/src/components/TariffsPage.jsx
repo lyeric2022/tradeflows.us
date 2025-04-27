@@ -76,7 +76,7 @@ const TariffsPage = () => {
         WebkitTextFillColor: 'transparent',
         textShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
-        Proposed Tariff Policy Analysis
+        America's Tariff Strategy & Analysis
       </h1>
       
       {/* Strategy Section */}

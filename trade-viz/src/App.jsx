@@ -155,7 +155,7 @@ export default function App() {
           alignItems: isMobile ? 'stretch' : 'center',
           gap: isMobile ? '10px' : 0
         }}>
-          <span style={{ marginBottom: isMobile ? '0.5rem' : 0 }}>Trade Visualization Globe</span>
+          <span style={{ marginBottom: isMobile ? '0.5rem' : 0 }}>USA Trade Flows Visualizer</span>
           <Navigation isMobile={isMobile} />
         </header>
         <main style={{ flex: 1, margin: 0, padding: 0 }}>

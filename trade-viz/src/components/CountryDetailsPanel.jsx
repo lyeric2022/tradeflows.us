@@ -52,7 +52,7 @@ export default function CountryDetailsPanel({
   // Style definitions
   const infoStyle = {
     position: 'absolute',
-    top: windowWidth <= 768 ? '200px' : '50px', 
+    top: windowWidth <= 768 ? '200px' : '90px', 
     right: '10px',
     background: 'rgba(0, 0, 0, 0.7)',
     color: 'white',
