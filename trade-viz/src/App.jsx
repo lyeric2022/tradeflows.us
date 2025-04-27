@@ -6,6 +6,7 @@ import AboutPage from './components/AboutPage';
 import Disclaimer from './components/Disclaimer';
 import CalculationsPage from './components/CalculationsPage';
 import TariffsPage from './components/TariffsPage';
+import ConversePage from './components/ConversePage';
 
 // Navigation component
 const Navigation = ({ isMobile }) => {
@@ -80,6 +81,22 @@ const Navigation = ({ isMobile }) => {
           textAlign: 'center'
         })}>
         Understand Tariffs
+      </NavLink>
+      <NavLink to="/converse"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Trump Chat
       </NavLink>
       <NavLink to="/about"
         style={({ isActive }) => ({
@@ -164,6 +181,7 @@ export default function App() {
             <Route path="/stats" element={<USATradeStats />} />
             <Route path="/calculations" element={<CalculationsPage />} />
             <Route path="/tariffs" element={<TariffsPage />} />
+            <Route path="/converse" element={<ConversePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
           </Routes>
