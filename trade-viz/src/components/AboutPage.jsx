@@ -307,7 +307,7 @@ export default function AboutPage() {
           marginTop: "1rem",
           opacity: "0.8" 
         }}>
-          © {new Date().getFullYear()} • Beta v0.1
+          © {new Date().getFullYear()} • TradeFlows • Beta v0.2.0
         </p>
       </Section>
     </div>

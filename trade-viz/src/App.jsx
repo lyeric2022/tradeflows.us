@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import ArcMap from './components/ArcMap';
 import USATradeStats from './components/USATradeStats';
 import AboutPage from './components/AboutPage';
@@ -6,9 +7,117 @@ import Disclaimer from './components/Disclaimer';
 import CalculationsPage from './components/CalculationsPage';
 import TariffsPage from './components/TariffsPage';
 
+// Navigation component
+const Navigation = ({ isMobile }) => {
+  return (
+    <nav style={{ 
+      display: 'flex', 
+      gap: '10px',
+      flexWrap: 'wrap',
+      justifyContent: isMobile ? 'center' : 'flex-end'
+    }}>
+      <NavLink to="/" 
+        className={({ isActive }) => isActive ? 'active-link' : ''}
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Globe View
+      </NavLink>
+      <NavLink to="/stats"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        USA Stats
+      </NavLink>
+      <NavLink to="/calculations"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Learn Calculations
+      </NavLink>
+      <NavLink to="/tariffs"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Understand Tariffs
+      </NavLink>
+      <NavLink to="/about"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        About
+      </NavLink>
+      <NavLink to="/disclaimer"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Disclaimer
+      </NavLink>
+    </nav>
+  );
+};
+
 export default function App() {
-  // State for tracking which component to show
-  const [activeView, setActiveView] = useState('globe');
   // State to track screen size
   const [isMobile, setIsMobile] = useState(false);
   
@@ -29,129 +138,37 @@ export default function App() {
   }, []);
   
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh'
-    }}>
-      <header style={{
-        padding: isMobile ? '0.5rem' : '1rem',
-        fontSize: isMobile ? 'clamp(1rem, 4vw, 1.5rem)' : '1.5rem',
-        fontWeight: 600,
-        borderBottom: '1px solid #333',
+    <BrowserRouter>
+      <div style={{
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        justifyContent: 'space-between',
-        alignItems: isMobile ? 'stretch' : 'center',
-        gap: isMobile ? '10px' : 0
+        flexDirection: 'column',
+        height: '100vh'
       }}>
-        <span style={{ marginBottom: isMobile ? '0.5rem' : 0 }}>Trade Visualization Globe</span>
-        <div style={{ 
-          display: 'flex', 
-          gap: '10px',
-          flexWrap: 'wrap',
-          justifyContent: isMobile ? 'center' : 'flex-end'
+        <header style={{
+          padding: isMobile ? '0.5rem' : '1rem',
+          fontSize: isMobile ? 'clamp(1rem, 4vw, 1.5rem)' : '1.5rem',
+          fontWeight: 600,
+          borderBottom: '1px solid #333',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? '10px' : 0
         }}>
-          <button 
-            onClick={() => setActiveView('globe')}
-            style={{
-              padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              backgroundColor: activeView === 'globe' ? '#1e7ac5' : '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              flex: isMobile ? '1 0 calc(33% - 7px)' : 'none'
-            }}
-          >
-            Globe View
-          </button>
-          <button 
-            onClick={() => setActiveView('stats')}
-            style={{
-              padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              backgroundColor: activeView === 'stats' ? '#1e7ac5' : '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              flex: isMobile ? '1 0 calc(33% - 7px)' : 'none'
-            }}
-          >
-            USA Stats
-          </button>
-          <button 
-            onClick={() => setActiveView('calculations')}
-            style={{
-              padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              backgroundColor: activeView === 'calculations' ? '#1e7ac5' : '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              flex: isMobile ? '1 0 calc(33% - 7px)' : 'none'
-            }}
-          >
-            Learn Calculations
-          </button>
-          <button 
-            onClick={() => setActiveView('tariffs')}
-            style={{
-              padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              backgroundColor: activeView === 'tariffs' ? '#1e7ac5' : '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              flex: isMobile ? '1 0 calc(33% - 7px)' : 'none'
-            }}
-          >
-            Understand Tariffs
-          </button>
-          <button 
-            onClick={() => setActiveView('about')}
-            style={{
-              padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              backgroundColor: activeView === 'about' ? '#1e7ac5' : '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              flex: isMobile ? '1 0 calc(33% - 7px)' : 'none'
-            }}
-          >
-            About
-          </button>
-          <button 
-            onClick={() => setActiveView('disclaimer')}
-            style={{
-              padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-              fontSize: isMobile ? '0.9rem' : '1rem',
-              backgroundColor: activeView === 'disclaimer' ? '#1e7ac5' : '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              flex: isMobile ? '1 0 calc(33% - 7px)' : 'none'
-            }}
-          >
-            Disclaimer
-          </button>
-        </div>
-      </header>
-      <main style={{ flex: 1, margin: 0, padding: 0 }}>
-        {activeView === 'globe' && <ArcMap />}
-        {activeView === 'stats' && <USATradeStats />}
-        {activeView === 'calculations' && <CalculationsPage />}
-        {activeView === 'tariffs' && <TariffsPage />}
-        {activeView === 'about' && <AboutPage />}
-        {activeView === 'disclaimer' && <Disclaimer />}
-      </main>
-    </div>
+          <span style={{ marginBottom: isMobile ? '0.5rem' : 0 }}>Trade Visualization Globe</span>
+          <Navigation isMobile={isMobile} />
+        </header>
+        <main style={{ flex: 1, margin: 0, padding: 0 }}>
+          <Routes>
+            <Route path="/" element={<ArcMap />} />
+            <Route path="/stats" element={<USATradeStats />} />
+            <Route path="/calculations" element={<CalculationsPage />} />
+            <Route path="/tariffs" element={<TariffsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
