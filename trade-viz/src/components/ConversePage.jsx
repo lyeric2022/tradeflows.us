@@ -67,6 +67,9 @@ const ConversePage = () => {
   const [typingTimer, setTypingTimer] = useState(null);
   const MIN_TYPING_DURATION = 2000; // 2 seconds minimum typing duration
 
+  // Add a state variable to track pending responses
+  const [pendingResponses, setPendingResponses] = useState([]);
+
   // Fetch initial history
   const fetchInitialHistory = useCallback(async () => {
     setIsLoadingHistory(true);
@@ -106,7 +109,18 @@ const ConversePage = () => {
         return;
       }
       
-      const wsUrl = 'ws://127.0.0.1:8000/ws/trump-chat';
+      // Check if we're running locally or on a deployed version
+      const isLocal = window.location.hostname === "localhost" || 
+                      window.location.hostname === "127.0.0.1";
+      
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      
+      // Use the new ngrok URL when running locally
+      const wsUrl = isLocal 
+        ? 'wss://b4ac-70-93-252-94.ngrok-free.app/ws/trump-chat'
+        : `${wsProtocol}//${window.location.host}/ws/trump-chat`;
+      
+      console.log(`Connecting to WebSocket: ${wsUrl}`);
       ws = new WebSocket(wsUrl);
       websocket.current = ws;
       
@@ -149,49 +163,60 @@ const ConversePage = () => {
 
           // Handle typing indicator messages
           if (newMessage.type === 'typing_indicator') {
-            if (newMessage.isTyping) {
-              // Start typing - record the time and set typing state
-              setTypingStartTime(Date.now());
-              setIsTyping(true);
-              
-              // Clear any existing timer
-              if (typingTimer) clearTimeout(typingTimer);
-            } else {
-              // Stop typing, but ensure minimum duration
-              const timeTyping = typingStartTime ? Date.now() - typingStartTime : 0;
-              
-              if (timeTyping < MIN_TYPING_DURATION) {
-                // If minimum duration hasn't elapsed, set a timer
-                const remainingTime = MIN_TYPING_DURATION - timeTyping;
-                const timer = setTimeout(() => {
-                  setIsTyping(false);
-                  setTypingTimer(null);
-                }, remainingTime);
-                setTypingTimer(timer);
-              } else {
-                // Minimum time elapsed, can stop immediately
-                setIsTyping(false);
-              }
-            }
-            return; // Don't add this to chat history
+            console.log('Typing indicator state:', newMessage.isTyping);
+            setIsTyping(newMessage.isTyping);
+            return;
+          }
+
+          // For any non-typing message that appears to be a response, turn off typing
+          if (newMessage.trump_response || 
+              (newMessage.type === 'trump_response') || 
+              (!newMessage.isUser && newMessage.content)) {
+            // Turn off typing indicator when ANY response is received
+            setIsTyping(false);
+            
+            // Also clear all pending responses - a response has arrived
+            setPendingResponses([]);
           }
 
           // Add regular messages to chat history
           setChatHistory(prevHistory => {
-            // Check if message already exists to prevent duplicates
+            // Improved duplicate detection with message_id
             const isDuplicate = prevHistory.some(msg => 
-              (msg.timestamp === newMessage.timestamp) && 
-              ((msg.content === newMessage.content) || 
-               (msg.trump_response === newMessage.trump_response))
+              // Check message_id if available
+              (newMessage.message_id && msg.message_id === newMessage.message_id) ||
+              // Otherwise check by content and timestamp
+              ((msg.timestamp === newMessage.timestamp) && 
+               ((msg.content === newMessage.content) || 
+                (msg.trump_response === newMessage.trump_response)))
             );
             
             if (isDuplicate) return prevHistory;
             
             // Add and sort messages
             const updatedHistory = [...prevHistory, newMessage];
-            return updatedHistory.sort((a, b) => 
-              new Date(a.timestamp) - new Date(b.timestamp)
-            );
+            console.log("Message being added:", newMessage);
+            console.warn('SORTING MESSAGES:', updatedHistory.map(msg => ({
+              isUser: msg.isUser,
+              content: msg.isUser ? msg.content : msg.trump_response,
+              time: new Date(msg.timestamp).toLocaleTimeString()
+            })));
+
+            return updatedHistory.sort((a, b) => {
+              // First attempt: force a specific user-then-response order regardless of timestamps
+              // For messages that seem to be question/answer pairs (close in time)
+              const timeA = new Date(a.timestamp).getTime();
+              const timeB = new Date(b.timestamp).getTime();
+              
+              // If messages are within 5 seconds of each other, sort by user/AI role
+              if (Math.abs(timeA - timeB) < 5000) {
+                if (a.isUser && !b.isUser) return -1; // User message first
+                if (!a.isUser && b.isUser) return 1;  // AI response second
+              }
+              
+              // Otherwise, use standard timestamp comparison for messages further apart in time
+              return timeA - timeB;
+            });
           });
         } catch (e) {
           console.error('Failed to parse message:', e);
@@ -261,10 +286,30 @@ const ConversePage = () => {
     setIsSending(true);
 
     try {
-      // Send message in the format expected by the backend
-      websocket.current.send(JSON.stringify({ message: currentMessage }));
+      // Generate message ID to track this message
+      const messageId = `msg_${Date.now()}`;
+      
+      // Add user message to chat history immediately
+      const userMessage = {
+        content: currentMessage,
+        isUser: true,
+        timestamp: new Date().toISOString(),
+        message_id: messageId
+      };
+      
+      // Update chat history with the user message
+      setChatHistory(prevHistory => [...prevHistory, userMessage]);
+      
+      // Send message with message_id for tracking
+      websocket.current.send(JSON.stringify({ 
+        message: currentMessage,
+        message_id: messageId 
+      }));
+      
+      // Track pending response for this message
+      setPendingResponses(prev => [...prev, messageId]);
+      
       setMessage('');
-      // Simulate typing indicator on submit
       setIsTyping(true);
 
       // Focus back on input after sending
@@ -275,9 +320,6 @@ const ConversePage = () => {
       console.error("Failed to send message via WebSocket:", err);
       setError("Failed to send message. Please try again.");
       setIsTyping(false);
-    } finally {
-      // Keep isSending true until a response is received or timeout
-      // setIsSending(false); // Removed timeout, let onmessage handle it
     }
   };
 
@@ -729,47 +771,13 @@ const ConversePage = () => {
             ))}
 
             {/* Typing Indicator */}
-            {isTyping && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                maxWidth: '90%',
-                margin: '1rem 1.5rem',
-                alignSelf: 'flex-start'
-              }}>
+            {(isTyping || pendingResponses.length > 0) && (
+              <div style={styles.typingIndicator}>
                 <TrumpAvatar />
-                <div style={{
-                  padding: '1rem',
-                  borderRadius: '1rem',
-                  backgroundColor: theme.messageTrump,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  borderBottomLeftRadius: '0.25rem',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: theme.secondary,
-                    animation: 'bounce 1.2s infinite 0s'
-                  }}></div>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: theme.secondary,
-                    animation: 'bounce 1.2s infinite 0.2s'
-                  }}></div>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: theme.secondary,
-                    animation: 'bounce 1.2s infinite 0.4s'
-                  }}></div>
+                <div style={styles.typingBubble}>
+                  <div style={{...styles.dot, ...styles.dot1}}></div>
+                  <div style={{...styles.dot, ...styles.dot2}}></div>
+                  <div style={{...styles.dot, ...styles.dot3}}></div>
                 </div>
               </div>
             )}

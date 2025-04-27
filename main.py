@@ -114,8 +114,14 @@ async def get_chat_history():
         print(f"Error fetching chat history: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while fetching history")
 
-async def process_and_broadcast_message(message_content):
+# Add this variable near the top of your file, after the manager initialization
+active_requests = {}  # Dictionary to track client requests
+
+async def process_and_broadcast_message(message_content, client_id, message_id):
     """Process a user message, store in DB, and broadcast response"""
+    
+    # Add forced delay to ensure typing indicator is visible for at least 2 seconds
+    await asyncio.sleep(2)
     
     # Current time in UTC
     current_time_utc = datetime.now(timezone.utc)
@@ -245,15 +251,22 @@ async def process_and_broadcast_message(message_content):
         "fact_check": fact_check_content,
         "isUser": False,
         "timestamp": current_time_utc.isoformat(),
-        "type": "trump_response"
+        "type": "trump_response",
+        "message_id": message_id  # Include message_id for tracking
     })
     
-    # Turn off typing indicator
-    await manager.broadcast({
-        "type": "typing_indicator",
-        "isTyping": False,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    })
+    # Remove this message from active requests
+    if client_id in active_requests and message_id in active_requests[client_id]:
+        active_requests[client_id].remove(message_id)
+        
+        # If this client has no more pending requests, turn off typing indicator
+        if not active_requests[client_id]:
+            await manager.broadcast({
+                "type": "typing_indicator",
+                "isTyping": False,
+                "client_id": client_id,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
 
 # --- WebSocket Connection Manager ---
 class ConnectionManager:
@@ -331,6 +344,10 @@ async def websocket_endpoint(websocket: WebSocket):
     # Use client IP or some identifier as client_id
     client_id = f"{websocket.client.host}:{websocket.client.port}"
     
+    # Initialize this client's active requests
+    if client_id not in active_requests:
+        active_requests[client_id] = set()
+    
     try:
         while True:
             data = await websocket.receive_text()
@@ -349,53 +366,24 @@ async def websocket_endpoint(websocket: WebSocket):
                             }))
                             continue
                         
-                        # Process message as before
-                        # ...existing code to store and process message...
-                        # Store message in database
-                        current_time_utc = datetime.now(timezone.utc)
-                        try:
-                            conn = get_db_connection()
-                            if conn:
-                                cursor = conn.cursor()
-                                cursor.execute(
-                                    """
-                                    INSERT INTO chat_messages (content, is_user, timestamp, trump_response, fact_check)
-                                    VALUES (%s, %s, %s, %s, %s)
-                                    """,
-                                    (
-                                        user_message, 
-                                        True, 
-                                        current_time_utc.isoformat(),
-                                        None,
-                                        None
-                                    )
-                                )
-                                conn.commit()
-                                cursor.close()
-                                conn.close()
-                                print("User message stored in database.")
-                                
-                                # Broadcast user message to ALL clients
-                                await manager.broadcast({
-                                    "content": user_message,
-                                    "isUser": True,
-                                    "timestamp": current_time_utc.isoformat()
-                                })
-                                
-                                # Immediately send typing indicator to ALL clients
-                                await manager.broadcast({
-                                    "type": "typing_indicator",
-                                    "isTyping": True,
-                                    "timestamp": datetime.now(timezone.utc).isoformat()
-                                })
-                                
-                                # Process in background
-                                asyncio.create_task(process_and_broadcast_message(user_message))
-                            else:
-                                print("Could not store user message - database connection failed.")
-                        except Exception as db_e:
-                            print(f"Exception during database user message insert: {db_e}")
+                        # Generate a unique message ID
+                        message_id = f"{client_id}-{datetime.now().timestamp()}"
                         
+                        # Store this message as an active request
+                        active_requests[client_id].add(message_id)
+                        
+                        # Process as before...
+                        
+                        # Immediately send typing indicator to ALL clients
+                        await manager.broadcast({
+                            "type": "typing_indicator",
+                            "isTyping": True,
+                            "client_id": client_id,
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        })
+                        
+                        # Process in background, passing client_id and message_id
+                        asyncio.create_task(process_and_broadcast_message(user_message, client_id, message_id))
                     else:
                         print("Received empty message.")
                 else:
