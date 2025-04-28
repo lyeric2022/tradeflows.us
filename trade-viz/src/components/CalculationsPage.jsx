@@ -35,7 +35,7 @@ const CalculationsPage = () => {
       paddingBottom: '1rem',
       marginBottom: '2.5rem',
       textAlign: 'center',
-      fontSize: isMobile ? '2rem' : '2.5rem',
+      fontSize: isMobile ? '1.8rem' : '2.3rem',
       textShadow: '0 2px 4px rgba(0,0,0,.3)',
       letterSpacing: '0.5px'
     }}>
@@ -62,7 +62,7 @@ const CalculationsPage = () => {
         color: '#fff', 
         marginTop: 0,
         marginBottom: '1.2rem',
-        fontSize: isMobile ? '1.5rem' : '1.7rem',
+        fontSize: isMobile ? '1.4rem' : '1.6rem',
         borderBottom: '1px solid rgba(52,152,219,.3)',
         paddingBottom: '.7rem'
       }}>
@@ -196,11 +196,11 @@ const CalculationsPage = () => {
             gap: '2.5rem'
           }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: 'bold', color: '#e74c3c', fontSize: '1.5rem' }}>≈2×</div>
+              <div style={{ fontWeight: 'bold', color: '#e74c3c', fontSize: '1.3rem' }}>≈2×</div>
               <div style={{ fontSize: '1rem' }}>Trade Impact Multiplier</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: 'bold', color: '#e74c3c', fontSize: '1.5rem' }}>2018-2022</div>
+              <div style={{ fontWeight: 'bold', color: '#e74c3c', fontSize: '1.3rem' }}>2018-2022</div>
               <div style={{ fontSize: '1rem' }}>Real-world Evidence</div>
             </div>
           </div>

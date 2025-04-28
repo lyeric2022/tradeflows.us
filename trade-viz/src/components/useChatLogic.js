@@ -21,6 +21,7 @@ export const useChatLogic = () => {
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [pendingResponses, setPendingResponses] = useState([]);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     // --- Refs ---
     const isAtBottomRef = useRef(true);
@@ -194,10 +195,19 @@ export const useChatLogic = () => {
     }, [handleScroll]);
 
     useEffect(() => {
-        if (isAtBottomRef.current) {
-            scrollToBottom('auto'); // Use 'auto' for immediate scroll on new message if already at bottom
+        if (chatHistory.length > 0) {
+            // On first load, don't auto-scroll to bottom
+            if (isFirstLoad) {
+                setIsFirstLoad(false);
+                return;
+            }
+            
+            // After first load, only auto-scroll if user was already at the bottom
+            if (isAtBottomRef.current) {
+                scrollToBottom();
+            }
         }
-    }, [chatHistory, isTyping, scrollToBottom]); // Rerun when history or typing state changes
+    }, [chatHistory, isFirstLoad, scrollToBottom]);
 
     // --- Message moderation with Cerebras ---
     const moderateMessage = async (messageText) => {

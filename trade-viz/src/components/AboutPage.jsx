@@ -117,13 +117,12 @@ export default function AboutPage() {
           </InfoBox>
           
           <InfoBox 
-            title="Economic Model" 
+            title="Trump Chat" 
             color="#3498db"
             width="48%"
           >
-            Uses the formula <InlineMath math={"Q = Q_0\\cdot e^{-\\varepsilon\\cdot \\Delta P/P}"} />, 
-            where <InlineMath math={"\\Delta P/P = \\tau/(1+\\tau)"} /> to calculate 
-            how tariffs affect trade volumes.
+            Ask AI Trump about his economic policies and tariff beliefs. Get insights into his 
+            perspectives on trade agreements, protectionist measures, and economic strategy.
           </InfoBox>
         </div>
 

@@ -7,6 +7,26 @@ import Disclaimer from './components/Disclaimer';
 import CalculationsPage from './components/CalculationsPage';
 import TariffsPage from './components/TariffsPage';
 import ConversePage from './components/ConversePage';
+import TechnologiesPage from './components/TechnologiesPage';
+
+// Import Firebase
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
+// Firebase configuration from environment variables
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // Navigation component
 const Navigation = ({ isMobile }) => {
@@ -115,6 +135,22 @@ const Navigation = ({ isMobile }) => {
         })}>
         About
       </NavLink>
+      <NavLink to="/technologies"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Tech
+      </NavLink>
       <NavLink to="/disclaimer"
         style={({ isActive }) => ({
           padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
@@ -184,6 +220,7 @@ export default function App() {
             <Route path="/tariffs" element={<TariffsPage />} />
             <Route path="/converse" element={<ConversePage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/technologies" element={<TechnologiesPage />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
           </Routes>
         </main>

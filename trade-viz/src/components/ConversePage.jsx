@@ -263,26 +263,27 @@ const styles = {
         height: '20px',
         display: 'block',
     },
-    scrollToBottomButton: (showScrollButton) => ({ // Make style dependent on showScrollButton prop
+    scrollToBottomButton: (showScrollButton) => ({
         position: 'absolute',
         bottom: '15px',
         right: '20px',
         width: '40px',
         height: '40px',
         borderRadius: '50%',
-        backgroundColor: theme.primary,
+        backgroundColor: 'white',
         color: 'white',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
         zIndex: 5,
         border: 'none',
         opacity: showScrollButton ? 1 : 0,
         transform: showScrollButton ? 'scale(1)' : 'scale(0.8)',
-        transition: 'opacity 0.3s, transform 0.3s',
+        transition: 'opacity 0.3s, transform 0.3s, border 0.2s',
         pointerEvents: showScrollButton ? 'auto' : 'none',
+        className: 'scroll-button'
     }),
     rateLimitNote: {
         textAlign: 'center',
@@ -343,10 +344,10 @@ const ConversePage = () => {
                 {/* Header */}
                 <div style={styles.header}>
                     <div style={styles.headerLeft}>
-                        <TrumpAvatar size={56} onClick={() => handleOpenProfile('trump')} />
+                        <TrumpAvatar size={64} onClick={() => handleOpenProfile('trump')} />
                         <div>
                             <h1 style={styles.headerTitle}>TRUMP CHAT</h1>
-                            <p style={styles.headerSubtitle}>Public conversation with the Trump AI & Fact Checker</p>
+                            <p style={styles.headerSubtitle}>Public conversation with the Trump AI + Fact Checker</p>
                         </div>
                     </div>
                     <div style={styles.connectionStatus(isConnected)}>
@@ -388,8 +389,8 @@ const ConversePage = () => {
                         {chatHistory.map((item, index) => (
                             <div key={`${item.timestamp}-${index}-${item.message_id || ''}`} style={styles.messageGroup(item.isUser)}>
                                 {item.isUser ?
-                                    <UserAvatar size={42} onClick={() => handleOpenProfile('public')} /> :
-                                    <TrumpAvatar size={42} onClick={() => handleOpenProfile('trump')} />
+                                    <UserAvatar size={48} onClick={() => handleOpenProfile('public')} /> :
+                                    <TrumpAvatar size={48} onClick={() => handleOpenProfile('trump')} />
                                 }
                                 <div style={styles.messageContent}>
                                     <div style={styles.messageHeader(item.isUser)}>
@@ -416,7 +417,7 @@ const ConversePage = () => {
                         ))}
                         {(isTyping || pendingResponses.length > 0) && (
                             <div style={styles.typingIndicator}>
-                                <TrumpAvatar size={42} onClick={() => handleOpenProfile('trump')} />
+                                <TrumpAvatar size={48} onClick={() => handleOpenProfile('trump')} />
                                 <div style={styles.typingBubble}>
                                     <div style={{ ...styles.dot, ...styles.dot1 }}></div>
                                     <div style={{ ...styles.dot, ...styles.dot2 }}></div>
@@ -428,9 +429,7 @@ const ConversePage = () => {
 
                     {/* Scroll to bottom button */}
                     <button style={styles.scrollToBottomButton(showScrollButton)} onClick={() => scrollToBottom('smooth')} aria-label="Scroll to bottom">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z" transform="rotate(180 12 12)" />
-                        </svg>
+                        <img src="/scroll-down.png" alt="Scroll down" style={styles.sendIconImage} />
                     </button>
                 </div>
 
@@ -442,7 +441,7 @@ const ConversePage = () => {
                             type="text"
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder={isConnected ? "Ask President Trump something..." : "Connecting..."}
+                            placeholder={isConnected ? "Ask President Trump on his perspective about economics, tariffs, geopolitics, etc." : "Connecting..."}
                             disabled={!isConnected || isSending}
                             style={styles.textInput}
                         />
@@ -456,7 +455,7 @@ const ConversePage = () => {
                         </button>
                     </form>
                     <div style={styles.rateLimitNote}>
-                        Rate limit: 3 messages/minute globally. All messages are public. Your message may be auto-modified if vague, offensive, or too lengthy.
+                        Rate limit: 3 messages/minute globally. All messages are public. Sent mssage may be auto-modified if vague, offensive, or weird.
                     </div>
                 </div>
             </div>
