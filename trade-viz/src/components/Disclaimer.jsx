@@ -135,7 +135,7 @@ export default function Disclaimer() {
         marginTop: '2rem',
         textAlign: 'center' 
       }}>
-        Last updated: April 25, 2025
+        Last updated: April 26, 2025
       </div>
     </div>
   );
