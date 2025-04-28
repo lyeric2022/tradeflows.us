@@ -166,7 +166,7 @@ async def process_and_broadcast_message(message_content, client_id, message_id):
     # Call Letta for Fact Checking - in parallel if possible
     try:
         fact_checker_agent_id = "agent-7334ad53-f9c4-4524-b299-cd307b1ffc4f"
-        fact_check_prompt = f'Fact check this message from Donald Trump: "{trump_response_content}"'
+        fact_check_prompt = f'Fact check this message from Donald Trump: "{trump_response_content}" How accurate is this statement?'
         
         # Get fact check response
         response_factcheck = await get_fact_check(fact_checker_agent_id, fact_check_prompt)
