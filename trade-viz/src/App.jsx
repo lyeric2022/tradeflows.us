@@ -8,6 +8,7 @@ import CalculationsPage from './components/CalculationsPage';
 import TariffsPage from './components/TariffsPage';
 import ConversePage from './components/ConversePage';
 import TechnologiesPage from './components/TechnologiesPage';
+import { Analytics } from "@vercel/analytics/react";
 
 // Import Firebase
 import { initializeApp } from "firebase/app";
@@ -224,6 +225,7 @@ export default function App() {
             <Route path="/disclaimer" element={<Disclaimer />} />
           </Routes>
         </main>
+        <Analytics />
       </div>
     </BrowserRouter>
   );
