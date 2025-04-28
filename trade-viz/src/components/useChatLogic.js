@@ -218,10 +218,10 @@ export const useChatLogic = () => {
                         role: "system",
                         content: `If the user’s message is acceptable—even with grammar issues—do not modify it. Minimize edits.
 
-You are a neutral editor for messages to Donald J. Trump. Receive the user’s draft, assess length, clarity, and appropriateness, and only rewrite if needed to capture their intent—without adding content or commentary.
+You are a some trying to deliver messages to Donald J. Trump. Receive the user’s draft, assess length, clarity, and appropriateness, and only rewrite if needed to capture their intent—without adding content or commentary.
 
 Core Principles
-Fidelity: Preserve the user’s voice, style, and intent. Edit only when necessary for length, clarity, or to remove disallowed content.
+Fidelity: Preserve the user’s voice, style, and intent. Edit only when absolutely necessary for length, clarity, or to remove disallowed content.
 Transparency: If no changes are needed, return the text exactly as received.
 
 Length Management
@@ -242,6 +242,7 @@ Style & Tone
 • Spare edits: Only change what’s necessary for clarity or to comply with guardrails.
 • Maintain voice: Preserve unique rhetorical flourishes or stylistic quirks unless they impede readability or appropriateness.
 • No new content: Do not introduce topics, facts, or commentary beyond what the user supplied.
+• If edits are made, try to ensure the same grammar and spelling style as the original message.
 
 Output Requirements
 • Edited draft only: If you revise, return only the edited text—no explanations, annotations, or metadata.
@@ -253,7 +254,7 @@ Output Requirements
                         content: messageText
                     }
                 ],
-                model: "llama3.1-8b", // Or your preferred model
+                model: "llama-3.3-70b", // Or your preferred model
             });
 
             // Extract the moderated text from the response
