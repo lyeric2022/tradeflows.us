@@ -97,7 +97,6 @@ const DevPage = () => {
         <section style={sectionStyle}>
           <h2 style={headingStyle}>My goals for this project</h2>
           <ul style={listStyle}>
-            <li style={listItemStyle}>Build with Letta and Palantir to apply for internships at both!</li>
             <li style={listItemStyle}>Limit-test myself to building something that users might actually care about and use</li>
             <li style={listItemStyle}>I'm doing CS + econ minor for school, and have longed to intersect both domains</li>
             <li style={listItemStyle}>Build something that costs me nothing (money-wise)</li>
