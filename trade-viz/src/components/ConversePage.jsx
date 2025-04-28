@@ -13,7 +13,7 @@ const styles = {
     pageContainer: {
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: '94.3vh',
         backgroundColor: theme.background,
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         padding: '20px 0',
@@ -51,7 +51,7 @@ const styles = {
     },
     headerTitle: {
         margin: 0,
-        fontSize: '1.35rem',
+        fontSize: '1.2rem', // Reduced from 1.35rem
         fontWeight: 700,
         background: `linear-gradient(135deg, ${theme.secondary} 0%, #f44336 100%)`,
         WebkitBackgroundClip: 'text',
@@ -60,13 +60,13 @@ const styles = {
     headerSubtitle: {
         margin: '0.2rem 0 0',
         color: theme.textSecondary,
-        fontSize: '0.9rem'
+        fontSize: '0.8rem' // Reduced from 0.9rem
     },
-    connectionStatus: (isConnected) => ({ // Make style dependent on isConnected prop
+    connectionStatus: (isConnected) => ({
         display: 'flex',
         alignItems: 'center',
         padding: '0.35rem 0.75rem',
-        fontSize: '0.8rem',
+        fontSize: '0.7rem', // Reduced from 0.8rem
         color: isConnected ? theme.success : theme.error,
         fontWeight: 500,
         backgroundColor: isConnected ? 'rgba(52, 168, 83, 0.1)' : 'rgba(234, 67, 53, 0.1)',
@@ -98,7 +98,7 @@ const styles = {
         borderRadius: '8px',
         border: `1px solid ${theme.error}20`,
         textAlign: 'center',
-        fontSize: '0.9rem',
+        fontSize: '0.8rem', // Reduced from 0.9rem
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
@@ -136,17 +136,17 @@ const styles = {
     }),
     messageAuthor: (isUser) => ({
         fontWeight: 600,
-        fontSize: '0.85rem',
+        fontSize: '0.75rem', // Reduced from 0.85rem
         color: isUser ? theme.primary : theme.secondary,
     }),
     messageTime: {
-        fontSize: '0.75rem',
+        fontSize: '0.7rem', // Reduced from 0.75rem
         color: theme.textSecondary,
         marginLeft: '4px',
     },
     messageBubble: (isUser) => ({
-        padding: '0.8rem 1rem',
-        borderRadius: '1rem',
+        padding: '0.5rem 1rem',
+        borderRadius: '0.4rem',
         backgroundColor: isUser ? theme.messageUser : theme.messageTrump,
         color: theme.text,
         boxShadow: '0 1px 1px rgba(0, 0, 0, 0.04)',
@@ -158,19 +158,20 @@ const styles = {
         borderBottomRightRadius: isUser ? '0.25rem' : '1rem',
         transform: 'translateY(0)',
         animation: 'fadeIn 0.3s ease-out',
+        fontSize: '0.9rem', // Reduced from 1rem
     }),
     factCheckSection: {
         marginTop: '1rem',
         paddingTop: '0.75rem',
         borderTop: `1px dashed ${theme.secondary}40`,
-        fontSize: '0.9rem',
+        fontSize: '0.7rem', // Reduced from 0.9rem
         color: theme.textSecondary,
     },
     factCheckHeader: {
         display: 'flex',
         alignItems: 'center',
         fontWeight: 600,
-        fontSize: '0.8rem',
+        fontSize: '0.7rem', // Reduced from 0.8rem
         color: theme.success,
         marginBottom: '4px',
     },
@@ -229,7 +230,7 @@ const styles = {
         padding: '0.75rem 1rem',
         borderRadius: '20px',
         border: `1px solid ${theme.border}`,
-        fontSize: '1rem',
+        fontSize: '0.9rem', // Reduced from 1rem
         outline: 'none',
         transition: 'border-color 0.2s, box-shadow 0.2s',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
@@ -286,7 +287,7 @@ const styles = {
     rateLimitNote: {
         textAlign: 'center',
         marginTop: '0.75rem',
-        fontSize: '0.75rem',
+        fontSize: '0.7rem', // Reduced from 0.75rem
         color: theme.textSecondary,
     },
     emptyChat: {
@@ -309,7 +310,7 @@ const styles = {
         margin: '0 0 0.75rem',
         color: theme.text,
         fontWeight: 700,
-        fontSize: '1.3rem'
+        fontSize: '1.15rem' // Reduced from 1.3rem
     },
 };
 
@@ -387,8 +388,8 @@ const ConversePage = () => {
                         {chatHistory.map((item, index) => (
                             <div key={`${item.timestamp}-${index}-${item.message_id || ''}`} style={styles.messageGroup(item.isUser)}>
                                 {item.isUser ?
-                                    <UserAvatar onClick={() => handleOpenProfile('public')} /> :
-                                    <TrumpAvatar onClick={() => handleOpenProfile('trump')} />
+                                    <UserAvatar size={42} onClick={() => handleOpenProfile('public')} /> :
+                                    <TrumpAvatar size={42} onClick={() => handleOpenProfile('trump')} />
                                 }
                                 <div style={styles.messageContent}>
                                     <div style={styles.messageHeader(item.isUser)}>
@@ -415,7 +416,7 @@ const ConversePage = () => {
                         ))}
                         {(isTyping || pendingResponses.length > 0) && (
                             <div style={styles.typingIndicator}>
-                                <TrumpAvatar onClick={() => handleOpenProfile('trump')} />
+                                <TrumpAvatar size={42} onClick={() => handleOpenProfile('trump')} />
                                 <div style={styles.typingBubble}>
                                     <div style={{ ...styles.dot, ...styles.dot1 }}></div>
                                     <div style={{ ...styles.dot, ...styles.dot2 }}></div>

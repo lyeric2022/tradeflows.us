@@ -11,103 +11,104 @@ import ConversePage from './components/ConversePage';
 // Navigation component
 const Navigation = ({ isMobile }) => {
   return (
-    <nav style={{ 
-      display: 'flex', 
-      gap: '10px',
+    <nav style={{
+      display: 'flex',
+      gap: '5px', // Reduced from 10px
       flexWrap: 'wrap',
       justifyContent: isMobile ? 'center' : 'flex-end'
     }}>
-      <NavLink to="/" 
+      <NavLink to="/"
         className={({ isActive }) => isActive ? 'active-link' : ''}
         style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem', // Reduced padding
+          fontSize: isMobile ? '0.8rem' : '0.9rem', // Reduced font size
           backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
           cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none', // Adjusted for smaller gap
           textDecoration: 'none',
           display: 'inline-block',
           textAlign: 'center'
         })}>
-        Globe View
-      </NavLink>
-      <NavLink to="/stats"
-        style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
-          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
-          textDecoration: 'none',
-          display: 'inline-block',
-          textAlign: 'center'
-        })}>
-        USA Stats
-      </NavLink>
-      <NavLink to="/calculations"
-        style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
-          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
-          textDecoration: 'none',
-          display: 'inline-block',
-          textAlign: 'center'
-        })}>
-        Learn Calculations
-      </NavLink>
-      <NavLink to="/tariffs"
-        style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
-          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
-          textDecoration: 'none',
-          display: 'inline-block',
-          textAlign: 'center'
-        })}>
-        Understand Tariffs
+        Globe
       </NavLink>
       <NavLink to="/converse"
         style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
           backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
           cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
           textDecoration: 'none',
           display: 'inline-block',
           textAlign: 'center'
         })}>
-        Trump Chat
+        Converse
       </NavLink>
-      <NavLink to="/about"
+      <NavLink to="/stats"
         style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
           backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
           cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Stats
+      </NavLink>
+      <NavLink to="/calculations"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Formulas
+      </NavLink>
+      <NavLink to="/tariffs"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
+          textDecoration: 'none',
+          display: 'inline-block',
+          textAlign: 'center'
+        })}>
+        Tariffs
+      </NavLink>
+
+      <NavLink to="/about"
+        style={({ isActive }) => ({
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
+          backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
           textDecoration: 'none',
           display: 'inline-block',
           textAlign: 'center'
@@ -116,19 +117,19 @@ const Navigation = ({ isMobile }) => {
       </NavLink>
       <NavLink to="/disclaimer"
         style={({ isActive }) => ({
-          padding: isMobile ? '0.4rem 0.8rem' : '0.5rem 1rem',
-          fontSize: isMobile ? '0.9rem' : '1rem',
+          padding: isMobile ? '0.2rem 0.5rem' : '0.3rem 0.7rem',
+          fontSize: isMobile ? '0.8rem' : '0.9rem',
           backgroundColor: isActive ? '#1e7ac5' : '#2c3e50',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
           cursor: 'pointer',
-          flex: isMobile ? '1 0 calc(33% - 7px)' : 'none',
+          flex: isMobile ? '1 0 calc(33% - 5px)' : 'none',
           textDecoration: 'none',
           display: 'inline-block',
           textAlign: 'center'
         })}>
-        Disclaimer
+        Legal
       </NavLink>
     </nav>
   );
@@ -137,23 +138,23 @@ const Navigation = ({ isMobile }) => {
 export default function App() {
   // State to track screen size
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Add a resize listener to detect screen size changes
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     // Initialize on mount
     handleResize();
-    
+
     // Add event listener
     window.addEventListener('resize', handleResize);
-    
+
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   return (
     <BrowserRouter>
       <div style={{
@@ -162,17 +163,17 @@ export default function App() {
         height: '100vh'
       }}>
         <header style={{
-          padding: isMobile ? '0.5rem' : '1rem',
-          fontSize: isMobile ? 'clamp(1rem, 4vw, 1.5rem)' : '1.5rem',
+          padding: isMobile ? '0.3rem' : '0.6rem', // Reduced header padding
+          fontSize: isMobile ? 'clamp(0.9rem, 4vw, 1.3rem)' : '1.3rem', // Smaller header text
           fontWeight: 600,
           borderBottom: '1px solid #333',
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
           justifyContent: 'space-between',
           alignItems: isMobile ? 'stretch' : 'center',
-          gap: isMobile ? '10px' : 0
+          gap: isMobile ? '5px' : 0 // Reduced gap
         }}>
-          <span style={{ marginBottom: isMobile ? '0.5rem' : 0 }}>USA Trade Flows Visualizer</span>
+          <span style={{ marginBottom: isMobile ? '0.3rem' : 0 }}>USA Trade Flows Visualizer</span>
           <Navigation isMobile={isMobile} />
         </header>
         <main style={{ flex: 1, margin: 0, padding: 0 }}>

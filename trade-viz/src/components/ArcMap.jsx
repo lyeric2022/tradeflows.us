@@ -126,7 +126,7 @@ export default function ArcMap({ csvUrl = '/flows.csv', tradeToGdpRatio = 0.3 })
         isGlobeSpinning={isGlobeSpinning}
         toggleSpinning={toggleSpinning}
         windowWidth={windowWidth}
-        windowHeight={window.innerHeight - 70}
+        windowHeight={window.innerHeight}
       />
       
       {/* Country details panel */}

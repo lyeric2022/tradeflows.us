@@ -214,7 +214,7 @@ export default function GlobeVisualization({
         arcDashGap={2}
         arcDashAnimateTime={isGlobeSpinning ? 4000 : Infinity} // Pause arc animation when globe is not spinning
         width={windowWidth}
-        height={ window.innerHeight - 73}
+        height={ window.innerHeight - 52}
         arcLabel={d => `
           Trade volume: ${d.value.toLocaleString()}
           ${d.reporterISO3} → ${d.partnerISO}

@@ -37,7 +37,7 @@ export const ProfileInfoModal = ({ isOpen, onClose, profileType }) => {
                         right: '12px',
                         border: 'none',
                         background: 'none',
-                        fontSize: '20px',
+                        fontSize: '18px', // Reduced from 20px
                         cursor: 'pointer',
                         padding: '5px',
                         borderRadius: '5px',
@@ -71,35 +71,42 @@ export const ProfileInfoModal = ({ isOpen, onClose, profileType }) => {
                         />
                     </div>
 
-                    <h3 style={{ margin: '0 0 10px 0', color: isTrump ? theme.secondary : theme.primary }}> {/* Use theme colors */}
+                    <h3 style={{ margin: '0 0 10px 0', color: isTrump ? theme.secondary : theme.primary, fontSize: '1.3rem' }}> {/* Added smaller font size */}
                         {isTrump ? 'Donald Trump' : 'Public User'}
                     </h3>
                 </div>
 
-                <div style={{ lineHeight: '1.5', color: theme.text }}>
+                <div style={{ lineHeight: '1.5', color: theme.text, fontSize: '0.95rem' }}> {/* Added smaller font size for content */}
                     {isTrump ? (
                         <>
                             <p>This is an AI simulation of Donald Trump, the 45th and 47th President of the United States. The AI is trained on his speeches, interviews, and public statements.</p>
 
-                            <h4 style={{ marginTop: '15px', marginBottom: '8px', color: theme.secondary }}>Bio</h4> {/* Use theme color */}
+                            <h4 style={{ marginTop: '15px', marginBottom: '8px', color: theme.secondary, fontSize: '1.1rem' }}> {/* Added smaller font size */}
+                                Bio
+                            </h4>
                             <p><strong>Born:</strong> June 14, 1946 in Queens, New York</p>
                             <p><strong>Career:</strong> Real estate developer, TV personality ("The Apprentice"), and politician</p>
                             <p><strong>Presidency:</strong> Served as the 45th President from 2017-2021 and as the 47th President from 2025</p>
                             <p><strong>Notable:</strong> Known for his direct communication style, "America First" policies, tax cuts, border security focus, and active use of social media.</p>
 
-                            <p style={{ marginTop: '12px', fontSize: '0.9em', fontStyle: 'italic', color: theme.textSecondary }}>The responses are generated based on Trump's speech patterns and known positions but may not perfectly reflect his actual views.</p>
+                            <p style={{ marginTop: '12px', fontSize: '0.85em', fontStyle: 'italic', color: theme.textSecondary }}> {/* Reduced from 0.9em */}
+                                The responses are generated based on Trump's speech patterns and known positions but may not perfectly reflect his actual views.
+                            </p>
                         </>
                     ) : (
-                        // Corrected Public User section
                         <>
                             <p>This represents public users like you who can ask questions and interact with the Trump AI.</p>
 
-                            <h4 style={{ marginTop: '15px', marginBottom: '8px', color: theme.primary }}>Public User Info</h4> {/* Use theme color */}
+                            <h4 style={{ marginTop: '15px', marginBottom: '8px', color: theme.primary, fontSize: '1.1rem' }}> {/* Added smaller font size */}
+                                Public User Info
+                            </h4>
                             <p><strong>Role:</strong> Ask questions, engage in dialogue, and explore policy perspectives</p>
                             <p><strong>Topics:</strong> Politics, economics, international relations, social issues, or personal questions</p>
                             <p><strong>Purpose:</strong> Educational dialogue to understand different political viewpoints</p>
 
-                            <p style={{ marginTop: '12px', fontSize: '0.9em', fontStyle: 'italic', color: theme.textSecondary }}>All messages in this chat are public, viewable by anyone, and subject to the platform's content policies.</p>
+                            <p style={{ marginTop: '12px', fontSize: '0.85em', fontStyle: 'italic', color: theme.textSecondary }}> {/* Reduced from 0.9em */}
+                                All messages in this chat are public, viewable by anyone, and subject to the platform's content policies.
+                            </p>
                         </>
                     )}
                 </div>
