@@ -80,11 +80,8 @@ export const useChatLogic = () => {
                 return;
             }
 
-            const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = isLocal
-                ? 'wss://7b0c-2603-8000-6840-100-216-3eff-fe50-f533.ngrok-free.app/ws/trump-chat' // Replace with your actual local/dev WS URL if needed
-                : `${wsProtocol}//${window.location.host}/ws/trump-chat`;
+            // Use fixed WebSocket URL regardless of environment
+            const wsUrl = 'wss://7b0c-2603-8000-6840-100-216-3eff-fe50-f533.ngrok-free.app/ws/trump-chat';
 
             console.log(`Connecting to WebSocket: ${wsUrl}`);
             ws = new WebSocket(wsUrl);
