@@ -224,6 +224,7 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/technologies" element={<TechnologiesPage />} />
             <Route path="/dev" element={<DevPage />} />
+            <Route path="/blog" element={<DevPage />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
           </Routes>
         </main>
