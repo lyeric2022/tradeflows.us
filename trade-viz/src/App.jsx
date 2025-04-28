@@ -8,6 +8,7 @@ import CalculationsPage from './components/CalculationsPage';
 import TariffsPage from './components/TariffsPage';
 import ConversePage from './components/ConversePage';
 import TechnologiesPage from './components/TechnologiesPage';
+import DevPage from './components/DevPage';
 import { Analytics } from "@vercel/analytics/react";
 
 // Import Firebase
@@ -34,7 +35,7 @@ const Navigation = ({ isMobile }) => {
   return (
     <nav style={{
       display: 'flex',
-      gap: '5px', // Reduced from 10px
+      gap: '5px',
       flexWrap: 'wrap',
       justifyContent: isMobile ? 'center' : 'flex-end'
     }}>
@@ -222,6 +223,7 @@ export default function App() {
             <Route path="/converse" element={<ConversePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/technologies" element={<TechnologiesPage />} />
+            <Route path="/dev" element={<DevPage />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
           </Routes>
         </main>
