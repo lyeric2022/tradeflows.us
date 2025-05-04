@@ -46,7 +46,7 @@ export const useChatLogic = () => {
         setIsLoadingHistory(true);
         setError(null);
         try {
-            const response = await fetch('https://7b0c-2603-8000-6840-100-216-3eff-fe50-f533.ngrok-free.app/trump-chat-history', {
+            const response = await fetch('https://monarch-powerful-squirrel.ngrok-free.app/trump-chat-history', {
                 headers: {
                     'ngrok-skip-browser-warning': 'true'
                 }
@@ -82,7 +82,7 @@ export const useChatLogic = () => {
             }
 
             // Use fixed WebSocket URL regardless of environment
-            const wsUrl = 'wss://7b0c-2603-8000-6840-100-216-3eff-fe50-f533.ngrok-free.app/ws/trump-chat';
+            const wsUrl = 'wss://monarch-powerful-squirrel.ngrok-free.app/ws/trump-chat';
 
             console.log(`Connecting to WebSocket: ${wsUrl}`);
             ws = new WebSocket(wsUrl);
